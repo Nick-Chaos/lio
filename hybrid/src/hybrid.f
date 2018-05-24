@@ -42,9 +42,9 @@
      . dihety,dihmty,impty, evaldihelog, evaldihmlog,
      . atange, atangm,
      . atdihe,atdihm,atimp,
-     . rclas, vat, izs, evaldihe,evaldihm, 
+     . rclas, vat, aat, izs, evaldihe,evaldihm, 
      . linkatom, numlink, linkat, linkqm, linkmm, linkmm2, parametro,
-     . linkqmtype, Elink, distl, pclinkmm, Emlink,
+     . linkqmtype, Elink, distl, pclinkmm, Emlink,frstme, 
 !cutoff
      . r_cut_list_QMMM,blocklist,blockqmmm,
      . listqmmm,MM_freeze_list, natoms_partial_freeze, 
@@ -55,6 +55,7 @@
      . aclas_BAND_old,
      . rclas_BAND,
      . vclas_BAND, fclas_BAND, Energy_band,
+     . NEB_distl, 
      . ucell,
      . ftol,
      . Ang, eV, kcal, 
@@ -322,12 +323,15 @@
      .               natot,na_u,nac,distl)
             xa(1:3,1:na_u)=rclas(1:3,1:na_u)
 	  else !NEB case
-
+	    NEB_distl=1.09
 	    do replica_number = NEB_firstimage, NEB_lastimage 
 	      rclas(1:3,1:natot)=rclas_BAND(1:3,1:natot,replica_number)
+	      distl(1:15)=NEB_distl(1:15,replica_number)
+	      frstme=.true.
 	      call link3(numlink,linkat,linkqm,linkmm,rclas,
      .               natot,na_u,nac,distl)
 	      rclas_BAND(1:3,1:na_u,replica_number)=rclas(1:3,1:na_u)
+	      NEB_distl(1:15,replica_number)=distl(1:15)
 	    end do
 	  
 	  end if
@@ -426,7 +430,7 @@
         endif
 
 ! Begin of coordinate relaxation iteration ============================
-        if (idyn .eq. 0 .or. idyn .eq. 1) then
+        if (idyn .eq. 0 .or. idyn .eq. 1 .or. idyn .eq. 2) then
           inicoor = 0
           fincoor = nmove
         endif
@@ -441,8 +445,8 @@
           write(6,'(/2a)') 'hybrid:                 ',
      .                    '=============================='
 
-          if (idyn .ne. 0 .and. idyn .ne. 1)
-     .    STOP 'only CG or BAND minimization avalable'
+          if (idyn .ne. 0 .and. idyn .ne. 1 .and. idyn .ne. 2)
+     .    STOP 'only CG, QM or BAND minimization avalable'
 
           write(6,'(28(" "),a,i6)') 'Begin CG move = ',istep
           write(6,'(2a)') '                        ',
@@ -459,7 +463,7 @@
 ! Calculate Energy and Forces using Lio as Subroutine
           if(qm) then 
 
-	  if (istep.eq.inicoor) then ! define lista de interacciones en el primer paso de cada valor del restrain
+	  if (istep.eq.inicoor ) then ! define lista de interacciones en el primer paso de cada valor del restrain
 	    if (allocated(r_cut_QMMM)) deallocate(r_cut_QMMM)
 	    if (allocated(F_cut_QMMM)) deallocate(F_cut_QMMM)
 	    if (allocated(Iz_cut_QMMM)) deallocate(Iz_cut_QMMM)
@@ -747,9 +751,12 @@ C Write atomic forces
      .                       '  cons, atom  ',icfmax(2)
       if(nfce.ne.natot) call iofa(natot,cfdummy)
 
-! here Etot in Hartree, cfdummy in Hartree/bohr
+! here Etot in Hartree, cfdummy in Hartree/bohra
+        do i=1, 9
+	  write(428,555) "fuerzas Nick Pre", i, rclas(1:3,i), cfdummy(1:3,i)
+        end do
 
-      if (idyn .eq. 0 ) then !Move atoms with a CG algorithm
+      if (idyn .eq. 0 .or. idyn .eq. 2) then !Move atoms with a CG algorithm
 
         if (writeRF .eq. 1) then!save coordinates and forces for integration 
            do itest=1, natot
@@ -759,9 +766,17 @@ C Write atomic forces
         end if
  
 
+	if (idyn .eq. 0) then
+        do i=1, 9
+          write(*,*) "fuerzas Nick CG", i, cfdummy(1:3,i)
+        end do
 
        call cgvc( natot, rclas, cfdummy, ucell, cstress, volume,
      .             dxmax, tp, ftol, strtol, varcel, relaxd, usesavecg )
+
+	elseif (idyn .eq. 2) then
+	  call quick_min(natot, rclas, cfdummy, aat, vat, masst)
+	end if
 
 !Nick center
         if (qm .and. .not. mm .and. Nick_cent) then
@@ -815,7 +830,6 @@ C Write atomic forces
       if (idyn .eq. 1 ) then !Move atoms in a NEB scheme
 
 	if (writeRF .eq. 1) then!save coordinates and forces for integration 
-
 	  open(unit=969, file="Pos_forces.dat")
 	  do replica_number = NEB_firstimage, NEB_lastimage ! Band Replicas
 	    do itest=1, natot
@@ -830,16 +844,22 @@ C Write atomic forces
 
 
 	call NEB_save_traj_energy()
+        do i=1, 9
+          write(*,*) "fuerzas Nick hyb", i, fclas_BAND(1:3,i,2)
+        end do
+
 	call NEB_steep(istep, relaxd) 
 
 ! Calculation Hlink's New positions 
         if(qm.and.mm) then
           if(linkatom) then
 	    do replica_number = NEB_firstimage, NEB_lastimage
+              distl(1:15)=NEB_distl(1:15,replica_number)
               rclas(1:3,1:natot)=rclas_BAND(1:3,1:natot,replica_number)
 	      call link3(numlink,linkat,linkqm,linkmm,rclas,
      .               natot,na_u,nac,distl)
 	      rclas_BAND(1:3,1:na_u,replica_number)=rclas(1:3,1:na_u)
+              NEB_distl(1:15,replica_number)=distl(1:15)
 	    end do
 	  endif !LA
 	endif !qm & mm
@@ -934,7 +954,7 @@ C Write atomic forces
 
 ! Print final date and time
       call timestamp('End of run')
-
+ 555  format(2x, A15,2x, I2, 6(2x,f10.6))
  345  format(2x, I2,    2x, 3(f10.6,2x))
  346  format(2x, f10.6, 2x, 3(f10.6,2x))
  956  format(2x, "Econtribution", 7(f18.6,2x))

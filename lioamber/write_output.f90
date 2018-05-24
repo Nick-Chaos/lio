@@ -108,7 +108,7 @@ subroutine write_forces(dxyz, natom, offset, uid)
         write(uid,100) kk, dxyz(1, kk), dxyz(2, kk), dxyz(3, kk)
     enddo
 
-100 format (I5,2x,f10.6,2x,f10.6,2x,f10.6)
+100 format (I5,2x,3(f30.10,2x))
 
     return
 end subroutine write_forces

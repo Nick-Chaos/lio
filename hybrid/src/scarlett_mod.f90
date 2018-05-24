@@ -15,6 +15,7 @@
 	real(dp), dimension(:,:), allocatable :: xa, fa !position and forces of QM atoms
 	double precision, dimension(:,:), allocatable :: rclas !Position of all atoms
 	double precision, dimension(:,:), allocatable :: vat !velocities of all atoms, not used for CG
+	double precision, dimension(:,:), allocatable :: aat
 	double precision :: time_steep
 	logical :: qm, mm ! True when system have a subsystem QM,MM
 	integer :: nparm !number of bond types in amber.parm. esta fijado en 500 por algun motivo, hay q arreglar esto, Nick
@@ -184,7 +185,7 @@
 	double precision :: Elink !Energy of link atoms
 	double precision :: distl(15) !distancia del link atom i al atomo QM mas cercano
 	double precision :: pclinkmm(15,15),Emlink(15,4)
-
+	logical :: frstme
 
 ! Lio
       double precision :: spin !number of unpaired electrons
@@ -209,7 +210,7 @@
 	double precision :: NEB_MAXFmod !Max force in NEB optimizarion
 	integer :: PNEB !enable partial nudged elastic band
 	integer :: PNEB_ini_atom, PNEB_last_atom ! initial and last atom in PNEB
-
+	double precision, dimension(:,:), allocatable :: NEB_distl !distancia del link atom i al atomo QM mas cercano
 !outputs
 	integer :: writeRF ! force integration
 

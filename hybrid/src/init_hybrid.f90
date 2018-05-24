@@ -7,17 +7,17 @@
 	use sys, only: die
 	use scarlett, only: natot, aclas_BAND_old, rclas_BAND, vclas_BAND, &
 	fclas_BAND, Energy_band, NEB_firstimage, NEB_lastimage, NEB_Nimages, &
-	PNEB, PNEB_ini_atom, PNEB_last_atom, &
+	PNEB, PNEB_ini_atom, PNEB_last_atom, NEB_distl, &
 	Ang, eV, kcal, na_u, qm, mm, nesp, natoms_partial_freeze, coord_freeze, &
 	nac, r_cut_list_QMMM, nparm, izs, Em, Rm, pc, rclas, MM_freeze_list, &
-	masst, vat, cfdummy, fdummy, qmattype, attype, atname, aaname, aanum, &
+	masst, vat, aat, cfdummy, fdummy, qmattype, attype, atname, aaname, aanum, &
 	ng1, blocklist, blockqmmm, listqmmm, fce_amber, ng1type, angetype, & 
 	angmtype, evaldihe, evaldihm, dihety, dihmty, impty, nonbonded, &
 	scale, evaldihelog, evaldihmlog, scalexat, nonbondedxat, kbond,bondeq, &
 	bondtype, kangle,angleeq,angletype, kdihe,diheeq,dihetype, multidihe, &
 	perdihe, kimp,impeq, imptype,multiimp, perimp, atange, atangm, atdihe, &
 	atdihm, bondxat, angexat, dihexat, dihmxat, angmxat, impxat, atimp, &
-	xa, fa, isa, iza, atsym, charge, spin, writeRF
+	xa, fa, isa, iza, atsym, charge, spin, writeRF, frstme
 	
 	
 	implicit none
@@ -92,7 +92,7 @@
 	!muchos allocate tienen valores fijos. habria que reveer esto en el futuro. Nick
 	  allocate(izs(natot), Em(natot), Rm(natot), pc(0:nac))
 	  allocate(rclas(3,natot), MM_freeze_list(natot), masst(natot))
-	  allocate(vat(3,natot), cfdummy(3,natot), fdummy(3,natot))
+	  allocate(vat(3,natot),aat(3,natot), fdummy(3,natot),cfdummy(3,natot))
 	  allocate(qmattype(na_u), attype(nac), atname(nac))
 	  allocate(aaname(nac), aanum(nac), ng1(nac,6), blocklist(natot))
 	  allocate(blockqmmm(nac), listqmmm(nac), fce_amber(3,nac))
@@ -113,7 +113,7 @@
 	
 	  writeRF=0
 	  writeRF = fdf_integer('PFIntegrationOutput',0)
-	
+	  frstme=.true.
 	elseif ( init_type == 'Constants') then !define constants and convertion factors
 	  Ang    = 1._dp / 0.529177_dp
 	  eV     = 1._dp / 27.211396132_dp
@@ -127,6 +127,7 @@
 	  allocate(rclas_BAND(3,natot,NEB_Nimages), vclas_BAND(3,natot,NEB_Nimages), &
 	         fclas_BAND(3,natot,NEB_Nimages), aclas_BAND_old(3,natot,NEB_Nimages))
 	  allocate(Energy_band(NEB_Nimages))
+	  allocate(NEB_distl(15, NEB_Nimages))
 	  rclas_BAND=0.d0
 	  vclas_BAND=0.d0
 	  fclas_BAND=0.d0
@@ -136,7 +137,10 @@
 	  if ( PNEB .eq.1 ) then
 	    PNEB_ini_atom=fdf_integer('PNEBi',1)
 	    PNEB_last_atom=fdf_integer('PNEBl',natot)
+	    write(*,*) "doing PNEB with atoms"
+	    write(*,*) PNEB_ini_atom, "to ", PNEB_last_atom
 	  end if
+	
 
 	else
 	  STOP "Wrong init_type"

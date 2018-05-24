@@ -837,6 +837,17 @@ subroutine SCF(E)
         end if
 
 !------------------------------------------------------------------------------!
+
+!	write(945,*) niter, M
+!        do jj=1,M
+!        do kk=jj,M
+!	  write(945,*) RMM(kk+(M2-jj)*(jj-1)/2)
+!	end do
+!	end do
+!	write(945,*) E,Ex
+!	call do_forces(946)
+
+
 ! TODO: convergence criteria should be a separated subroutine...
         good = 0.0d0
         do jj=1,M
