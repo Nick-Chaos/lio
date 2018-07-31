@@ -29,18 +29,22 @@
 ! Cut Off & freeeze variables 
 	integer, allocatable, dimension(:) :: r_cut_list_QMMM
 	logical, allocatable, dimension(:) :: MM_freeze_list
+	logical, allocatable, dimension(:) :: inner_freeze_list
 	integer :: natoms_partial_freeze !number of atoms with 0 force in any direction
 	integer,  allocatable, dimension(:,:) :: coord_freeze !cartesian direction with force = 0
-
+	integer :: inner_blo
 
 ! Cut Off QM-MM variables
 	integer, dimension(:), allocatable, save:: blocklist,blockqmmm,listqmmm
 !listas para congelar atomos, hay q reveer estas subrutinas, por ahora estoy usando mis subrutinas, nick
 
-!Dynamics
-	double precision :: Ekinion ! Kinectic energy
-	double precision :: tempion ! Actual Temperature of system
-	double precision :: tempinit ! Starting Temperature
+
+! Lio
+      logical :: do_SCF, do_QM_forces !control for make new calculation of rho, forces in actual step
+      logical :: do_properties !control for lio properties calculation
+
+
+
 
 
 
@@ -219,7 +223,7 @@
 	integer, dimension(:), allocatable :: NEB_Ndescend !number of consecutive steps in which F·v >= 0 for image i in FIRE NEB
 !outputs
 	integer :: writeRF ! force integration
-	integer :: traj_frec ! Frecuency to write trayectory and Energy in .rcg and .rce files
+
 ! Conversion factors
 	real(dp) :: Ang !r_in_bohr=r_in_ang * Ang
 	real(dp) :: eV !E_in_Hartree=E_in_eV * eV
@@ -228,7 +232,4 @@
 ! Others that need check
 	real(dp) :: ucell(3,3)
 
-! Nuevos jota
-	double precision :: Nav !Avogadro Number
-	double precision :: pi  
 	end module scarlett

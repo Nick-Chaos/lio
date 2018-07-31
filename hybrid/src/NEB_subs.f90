@@ -136,11 +136,25 @@
 	  do i=initial_atom,last_atom
 	    NORMVECA= tang_vecA(1,i)**2 + tang_vecA(2,i)**2 + tang_vecA(3,i)**2
 	    NORMVECA=sqrt(NORMVECA)
-	    tang_vecA(1:3,i)=tang_vecA(1:3,i)/NORMVECA
-	
+
+	    if (NORMVECA .lt. 1d-300) then
+	      tang_vecA(1:3,i)=0.d0
+	    else if (NORMVECA .ne. NORMVECA) then
+	      stop "NAN in tangent vector A"
+	    else
+	      tang_vecA(1:3,i)=tang_vecA(1:3,i)/NORMVECA
+	    end if
+
 	    NORMVECB= tang_vecB(1,i)**2 + tang_vecB(2,i)**2 + tang_vecB(3,i)**2
 	    NORMVECB=sqrt(NORMVECB)
-	    tang_vecB(1:3,i)=tang_vecB(1:3,i)/NORMVECB
+
+	    if (NORMVECB .lt. 1d-300) then
+	      tang_vecB(1:3,i)=0.d0
+	    else if (NORMVECB .ne. NORMVECB) then
+	      stop "NAN in tangent vector B"
+	    else
+	      tang_vecB(1:3,i)=tang_vecB(1:3,i)/NORMVECB
+	    end if
 	  end do
 	
 	  tang_vec(1:3,initial_atom:last_atom)= &
@@ -155,6 +169,31 @@
 	  rclas_BAND(1:3,initial_atom:last_atom,replica_number+1) &
 	  - rclas_BAND(1:3,initial_atom:last_atom,replica_number)
 	
+
+
+            NORMVECA= tang_vecA(1,i)**2 + tang_vecA(2,i)**2 + tang_vecA(3,i)**2
+            NORMVECA=sqrt(NORMVECA)
+
+            if (NORMVECA .lt. 1d-300) then
+              tang_vecA(1:3,i)=0.d0
+            else if (NORMVECA .ne. NORMVECA) then
+              stop "NAN in tangent vector A"
+            else
+              tang_vecA(1:3,i)=tang_vecA(1:3,i)/NORMVECA
+            end if
+
+            NORMVECB= tang_vecB(1,i)**2 + tang_vecB(2,i)**2 + tang_vecB(3,i)**2
+            NORMVECB=sqrt(NORMVECB)
+
+            if (NORMVECB .lt. 1d-300) then
+              tang_vecB(1:3,i)=0.d0
+            else if (NORMVECB .ne. NORMVECB) then
+              stop "NAN in tangent vector B"
+            else
+              tang_vecB(1:3,i)=tang_vecB(1:3,i)/NORMVECB
+            end if
+
+
 	  E0=Energy_band(replica_number-1)
 	  E1=Energy_band(replica_number)
 	  E2=Energy_band(replica_number+1)
@@ -175,10 +214,10 @@
 	END IF
 	
 	do i=initial_atom,last_atom
-	  if (i.lt. 9) write(556,*) "tangente", i, tang_vec(1:3,i)
+	  !if (i.lt. 9) write(556,*) "tangente", i, tang_vec(1:3,i)
 	  NORMVEC= tang_vec(1,i)**2 + tang_vec(2,i)**2 + tang_vec(3,i)**2
 	  NORMVEC=sqrt(NORMVEC)
-	  if (NORMVEC .lt. 1d-20) then
+	  if (NORMVEC .lt. 1d-300) then
 !	    write(*,*) "tangent vector null, replica: ",replica_number, "atom ", i
 	     tang_vec(1:3,i)=0.d0
 !	    stop
@@ -210,7 +249,7 @@
 
 
 	SUBROUTINE NEB_calculate_spring_force(methodSF, replica_number, tang_vec, F_spring)
-	use scarlett, only: NEB_Nimages, NEB_Nimages, natot, rclas_BAND
+	use scarlett, only: NEB_Nimages, NEB_Nimages, natot, rclas_BAND, fclas_BAND
 	implicit none
 	double precision, dimension(3,natot), intent(inout) :: F_spring
 	double precision, dimension(3,natot), intent(in)  :: tang_vec
@@ -234,7 +273,9 @@
 	  else
 	    stop "wrong methodSF"
 	  endif
-	    F_spring(1:3,i)=auxescalar*tang_vec(1:3,i)
+	    if ((fclas_BAND(1,i,replica_number)**2+fclas_BAND(2,i,replica_number)**2 + fclas_BAND(3,i,replica_number)**2) .gt. 0.d0 ) then
+	       F_spring(1:3,i)=auxescalar*tang_vec(1:3,i)
+	    end if
 	end do
 	return
 	END SUBROUTINE NEB_calculate_spring_force
@@ -369,7 +410,7 @@
 	  end if
 	end do
 	
-	if (band_xv_found) then !restart case
+	if ( band_xv_found) then !restart case
 	  write(*,*) "used .XV. restarts"
 	else !not restart case
 	  write(*,*) "didnt found all necesary restarts .XV.i"

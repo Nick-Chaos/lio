@@ -156,9 +156,9 @@ c	write(*,*) "i1 i2 i3 i4", i1, i2, i3, i4
      .                  ramber(1,i3),ramber(2,i3),ramber(3,i3),
      .                  ramber(1,i4),ramber(2,i4),ramber(3,i4),
      .                  mx,my,mz,rm,nx,ny,nz,rn,dih)
-        fce=0.d0       
+        fce=0.0       
 	scal=mx*nx + my*ny + mz*nz    
-        dtot = (kd/dble(mult))*(-dSIN((pi/180d0)*
+        dtot = (kd/mult)*(-dSIN((pi/180d0)*
      .  (per*dih-eq)))*(per)
         prue=scal/(rn*rm)
         prue=(1.d0-(prue)**2d0) 
@@ -355,7 +355,7 @@ c       calculo del prod scalar n*m
         if(arg.ge.1.d0) then 
 	dihedro=0.d0 
 	elseif(arg.le.-1.d0) then
- 	dihedro=pi
+ 	dihedro=180.d0
 	else
         dihedro = dACOS(arg)
 	endif

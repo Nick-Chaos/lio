@@ -263,7 +263,6 @@ c nullify fce and vel
            if (blocklist(i).eq.1) then
            cfdummy(1:3,i)=0.0
            vat(1:3,i)=0.0
-c	   write(18200,*) "Congelé átomo QM", i ! Jota para test que congela aun si no hay parte QM
            endif
         enddo
 
@@ -271,7 +270,6 @@ c	   write(18200,*) "Congelé átomo QM", i ! Jota para test que congela aun si 
            if (blockqmmm(i).eq.1.or.blocklist(i+na_u).eq.1) then
            cfdummy(1:3,i+na_u)=0.0
            vat(1:3,i+na_u)=0.0
-c           write(182,*) "Congelé átomo MM", i
            endif
         enddo
 

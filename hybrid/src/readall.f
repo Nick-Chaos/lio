@@ -116,14 +116,14 @@ C Read the Dynamics Options
      .                   dt, dxmax, ftol,  
      .                   usesavecg, usesavexv , Nick_cent,
      .                   na, 
-     .                   nat, nfce, wricoord, mmsteps, tempinit)
+     .                   nat, nfce, wricoord, mmsteps)
 
 C  Modules
       use precision
       use fdf
       use sys
       use scarlett, only: NEB_move_method, NEB_spring_constant,
-     .   NEB_Nimages, time_steep, time_steep_max, traj_frec
+     .   NEB_Nimages, time_steep, time_steep_max, inner_blo
 
       implicit none
 
@@ -134,7 +134,7 @@ C  Modules
      .  wricoord, nat
 
       double precision
-     .  dt, dxmax, ftol, tempinit
+     .  dt, dxmax, ftol
 
       logical
      .    usesavecg, usesavexv, Nick_cent
@@ -161,11 +161,6 @@ C  Internal variables .................................................
 
       logical
      .  leqi, qnch, qnch_default
-
-C Temperatura inicial
-
-	tempinit = fdf_physical('MD.InitialTemperature',300.d0,'K')
-
 
 C Kind of dynamics
       dyntype_default='Jolie'
@@ -198,11 +193,6 @@ C Kind of dynamics
           write(6,'(a,4x,l1)')
      .     'read: Use continuation files for CG    = ',
      .     usesavecg
-      else if (leqi(dyntype,'verlet')) then
-        idyn = 4
-          write(6,'(a,a)')
-     .     'read: Dynamics option                  = ',
-     .     '    Velocity Verlet MD run'
       elseif (leqi(dyntype,'neb')) then
         idyn = 1
           write(6,'(a,a)')
@@ -259,6 +249,9 @@ C Tolerance in the maximum atomic force (def 0.04 eV/Ang)
 
 C re-Center system
       Nick_cent = fdf_boolean('CG.Nick_center', .false.)
+C inner freeze
+	inner_blo = fdf_integer('FreezeInner',0)
+
 
       if (idyn .eq. 0) then
         write(6,'(a,i5)') 
@@ -278,8 +271,7 @@ C hay qunificar los timesteeps
       time_steep = fdf_double('Tstep',
      .  time_steep_default)
       time_steep_max=75.d0*time_steep
-C Trajectory frecuency to write coordinates and Energy 
-	traj_frec = fdf_integer('MD.TrajFrec',100)
+
 
 C Quench Option
       qnch_default = .false.

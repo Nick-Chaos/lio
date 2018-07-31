@@ -33,9 +33,15 @@
 	    velocity_mod=velocity_mod+vel(j,i)*vel(j,i)
 	  end do
 	  velocity_proyected=velocity_proyected+velocity_proyected_at
-	  if (velocity_proyected_at .lt. 0.d0) damp=.true.
+	  if (velocity_proyected_at .lt. 0.d0) then
+	    damp=.true.
+	    write(*,*) "atom: ", i, "need damp"
+	  end if
 	end do
 	velocity_mod=sqrt(velocity_mod)
+
+!	damp=.false.
+!	if (velocity_proyected .lt. 0.d0) damp=.true.
 
 	if (.not. damp) then
 	  Ndescend=Ndescend+1

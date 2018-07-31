@@ -44,11 +44,12 @@
      . atdihe,atdihm,atimp,
      . rclas, vat, aat, izs, evaldihe,evaldihm, 
      . linkatom, numlink, linkat, linkqm, linkmm, linkmm2, parametro,
-     . linkqmtype, Elink, distl, pclinkmm, Emlink, frstme, pi,
+     . linkqmtype, Elink, distl, pclinkmm, Emlink, frstme,
 !cutoff
      . r_cut_list_QMMM,blocklist,blockqmmm,
      . listqmmm,MM_freeze_list, natoms_partial_freeze, 
      . natoms_partial_freeze, coord_freeze, 
+     . inner_blo, inner_freeze_list,
 !NEB
      . NEB_Nimages, 
      . NEB_firstimage, NEB_lastimage,  
@@ -59,14 +60,12 @@
      . ucell,
      . ftol,
      . Ang, eV, kcal, 
-!Dynamics
-     . Ekinion, tempion, tempinit,
 !FIRE
      . time_steep, Ndescend, time_steep_max, alpha,
 !Lio
-     . charge, spin,
+     . charge, spin, do_SCF, do_QM_forces, do_properties, 
 !outputs
-     . writeRF, slabel, traj_frec
+     . writeRF, slabel
 
       implicit none
 ! General Variables
@@ -125,9 +124,6 @@
       double precision :: radbloqmmm ! distance that allow to move MM atoms from QM sub-system
       double precision :: radblommbond !parche para omitir bonds en extremos terminales, no se computan bonds con distancias mayores a radblommbond
       logical ::  recompute_cuts
-! Lio
-      logical :: do_SCF, do_QM_forces !control for make new calculation of rho, forces in actual step
-      logical :: do_properties !control for lio properties calculation
 
 ! Optimization scheme
       integer :: opt_scheme ! turn on optimization scheme
@@ -284,7 +280,18 @@
 ! Read simulation data 
       call read_md( idyn, nmove, dt, dxmax, ftol, 
      .              usesavecg, usesavexv , Nick_cent, na_u,  
-     .              natot, nfce, wricoord, mmsteps, tempinit)
+     .              natot, nfce, wricoord, mmsteps)
+
+
+          write(*,*) "inner_blo", inner_blo
+	  inner_blo=inner_blo*Ang
+          if (inner_blo .gt. 0) then
+	    allocate(inner_freeze_list(natot))
+	    inner_freeze_list=.false.
+	    do_SCF=.false.
+	    do_QM_forces=.false.
+	  end if
+
 
 ! Assignation of masses and species 
       call assign(na_u,nac,atname,iza,izs,masst)
@@ -409,15 +416,6 @@
       call fixed1(na_u,nac,natot,nroaa,rclas,blocklist,
      .            atname,aaname,aanum,water)
 
-! Build initial velocities according to Maxwell-Bolzmann distribution
-        if (idyn .eq. 4 .and. (.not. foundvat))
-     .  call vmb(natot,tempinit,masst,rclas,0,vat)
-
-!tempinit
-
-
-
-
 !########################################################################################
 !#####################################  MAIN LOOPS  #####################################
 !########################################################################################
@@ -445,7 +443,7 @@
         endif
 
 ! Begin of coordinate relaxation iteration ============================
-        if (idyn .lt. 5 ) then ! case 0 1 2 3
+        if (idyn .lt. 4 ) then ! case 0 1 2 3
           inicoor = 0
           fincoor = nmove
         endif
@@ -460,7 +458,7 @@
           write(6,'(/2a)') 'hybrid:                 ',
      .                    '=============================='
 
-          if (idyn .ge. 5) 
+          if (idyn .ge. 4) 
      .    STOP 'only CG, QM, FIRE or NEB minimization available'
 
           write(6,'(28(" "),a,i6)') 'Begin move = ',istep
@@ -472,7 +470,12 @@
 	do replica_number = NEB_firstimage, NEB_lastimage      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Band Replicas
 	  if (idyn .eq.1) then
 	    rclas(1:3,1:natot)=rclas_BAND(1:3,1:natot,replica_number)
+	    vat(1:3,1:natot)=vclas_BAND(1:3,1:natot,replica_number)
 	  end if
+
+!test
+!	           call wrirtc(slabel,Etots,rt(1),istepconstr,na_u,nac,natot,
+!     .             rclas,atname,aaname,aanum,nesp,atsym,isa)
 
 
 ! Calculate Energy and Forces using Lio as Subroutine
@@ -496,6 +499,22 @@
 		  MM_freeze_list(i_qm)=.false.
 		end do
 	    end if
+
+	    if ((inner_blo).gt.0) then !solo para test
+		inner_freeze_list=.false.
+	      do i_qm=1,na_u
+		inner_freeze_list(i_qm)=.true.
+	      end do
+	      do i_mm=1, nac
+		do i_qm=1,na_u
+		  r12=(rclas(1,i_qm)-rclas(1,i_mm+na_u))**2.d0 +
+     .              (rclas(2,i_qm)-rclas(2,i_mm+na_u))**2.d0 +
+     .              (rclas(3,i_qm)-rclas(3,i_mm+na_u))**2.d0
+		  if (r12 .lt. inner_blo**2) inner_freeze_list(na_u+i_mm)=.true.
+		end do
+	      end do
+	    end if
+
 
 	    do i_mm=1, nac !MM atoms
 	      i_qm=0
@@ -564,7 +583,8 @@ c return forces to fullatom arrays
      .        F_cut_QMMM(1:3,r_cut_list_QMMM(i-na_u)+na_u)
 	    end if
           end do
-        endif !qm    termino el if(qm)
+        endif !qm
+
 ! here Etot in Hartree, fdummy in Hartree/bohr
 
 ! Start MMxQM loop
@@ -592,9 +612,8 @@ c return forces to fullatom arrays
               endif !LA
             endif !qm & mm
 
-! Calculate pure Solvent energy and forces
+! Calculate pure Solvent energy and forces 
             if(mm) then
-
       call solv_ene_fce(natot,na_u,nac,ng1,rclas,Em,Rm,pc(1:nac),
      .    Etot_amber,fce_amber,attype,
      .    nbond,nangle,ndihe,nimp,multidihe, multiimp,kbond,bondeq,
@@ -612,13 +631,12 @@ c return forces to fullatom arrays
 
 ! converts fdummy to Kcal/mol/Ang  
             fdummy(1:3,1:natot)=fdummy(1:3,1:natot)*Ang/eV*kcal
-
 ! here Etot in Hartree, fdummy in kcal/mol Ang
 
 ! add famber to fdummy  
             if(mm) then
               fdummy(1:3,na_u+1:natot)=fdummy(1:3,na_u+1:natot)
-     .        +0.5d0*fce_amber(1:3,1:nac)
+     .        +fce_amber(1:3,1:nac)
             endif !mm
 
 ! Calculation of LinkAtom Energy and Forces
@@ -656,18 +674,17 @@ c return forces to fullatom arrays
 ! here Etot in Hartree, fdummy in Hartree/bohr
 
 ! Writes final energy decomposition
-	Etots=Etot+0.5d0*(Elj+((Etot_amber+Elink)/kcal*eV))
-!        Etots=2.d0*Etot+Elj+((Etot_amber+Elink)/kcal*eV)
-!        Etots=0.5d0*Etots
+        Etots=2.d0*Etot+Elj+((Etot_amber+Elink)/kcal*eV)
+        Etots=0.5d0*Etots
+
        write(6,*)
-	write(6,'(/,a)') 'hybrid: Energy Decomposition (eV):'
-	if(qm) write(6,999)           'Elio :',Etot/eV      
-	if(qm.and.mm) write(6,999)    'Elj:    ',Elj*0.5d0/eV       
-	if(mm) write(6,999)      'Esolv:  ',Etot_amber*0.5d0/kcal   
-	if(Elink.ne.0.0) write(6,999) 'Elink:  ',Elink*0.5d0/kcal
-	write(6,999)    'Etots:  ',Etots/eV
+       write(6,'(/,a)') 'hybrid: Energy Decomposition (eV):'
+       if(qm) write(6,'(a,2x,F16.6)')           'Elio :',Etot/eV      
+       if(qm.and.mm) write(6,'(a,2x,F16.6)')    'Elj:    ',Elj/eV       
+       if(mm) write(6,'(a,2x,F16.6)')      'Esolv:  ',Etot_amber/kcal   
+       if(Elink.ne.0.0) write(6,'(a,2x,F16.6)') 'Elink:  ',Elink/kcal
+       if(qm.and.mm) write(6,'(a,2x,F16.6)')    'Etots:  ',Etots/eV
        call flush(6)
-! saque if para Etots
 
 ! Sets fdummy to zero inside mmxqm step
        if(qm.and.mm) then
@@ -688,7 +705,6 @@ c return forces to fullatom arrays
 ! Impose constraints to atomic movements by changing forces
        call fixed2(na_u,nac,natot,nfree,blocklist,blockqmmm,
      .             fdummy,cfdummy,vat)
-
 ! from here cfdummy is the reelevant forces for move system
 ! here Etot in Hartree, cfdummy in Hartree/bohr
 
@@ -705,26 +721,37 @@ c return forces to fullatom arrays
         end if
 
 ! freeze MM atom
-	if (qm) then
         do inick=1, natot
           if(MM_freeze_list(inick)) then
             cfdummy(1:3,inick) = 0.d0
+	    vat(1:3, inick) = 0.d0
           end if
         end do
-	endif !jota
+! freeze inner atoms
+	if (inner_blo .gt. 1) then
+	  write(*,*) "Warning: Freezin atoms at: ", inner_blo, "of QM"
+	  do inick=1, natot
+	    if (inner_freeze_list(inick)) then
+	      cfdummy(1:3,inick) = 0.d0
+	      vat(1:3, inick) = 0.d0
+	    end if
+	  end do
+	end if
+
 
 ! partial freeze
 	do inick=1,natoms_partial_freeze
 	  do jnick=1,3
 	    if (coord_freeze(inick,1+jnick) .eq. 1) then
 	      cfdummy(jnick,coord_freeze(inick,1))=0.d0
+	      vat(jnick, coord_freeze(inick,1)) = 0.d0
 	    end if
 	  end do
 	enddo
 
 
 ! write xyz, hay q ponerle un if para escribir solo cuando se necesita
-c	call write_xyz(natot, na_u, iza, pc, rclas)
+	call write_xyz(natot, na_u, iza, pc, rclas)
 
 C Write atomic forces 
       fmax = 0.0_dp
@@ -768,47 +795,19 @@ C Write atomic forces
      .        cfdummy(1:3,itest)*kcal/(eV *Ang)  ! Ang, kcal/ang mol
            end do
         end if
-
-	Ekinion=0.d0
  
-	if (idyn .eq. 0) then !Conjugated Gradient
+	if (idyn .eq. 0) then
 	  call cgvc( natot, rclas, cfdummy, ucell, cstress, volume,
      .             dxmax, tp, ftol, strtol, varcel, relaxd, usesavecg )
-	elseif (idyn .eq. 2) then !Quick Minimization
+	elseif (idyn .eq. 2) then
 	  call check_convergence(relaxd, cfdummy)
 	  if (.not. relaxd) call quick_min(natot, rclas, cfdummy, aat,
      .    vat, masst)
-	elseif (idyn .eq. 3) then !FIRE
+	elseif (idyn .eq. 3) then
 	  call check_convergence(relaxd, cfdummy)
 	  if (.not. relaxd) call FIRE(natot, rclas,cfdummy, aat, vat, 
      .    masst, time_steep,Ndescend, time_steep_max, alpha)
-	elseif (idyn .eq. 4) then
-	  call verlet2(istp, 3, 0, natot, cfdummy, dt,
-     .        masst, 0, vat, rclas, Ekinion, tempion, nfree)
-!iquench lo dejamos como 0, luego cambiar
-!ntcon lo dejamos como 0, luego agregar
-!iunit fijado en 3
-
-	else
-	  STOP "Wrong idyn value"
 	end if
-
-
-       if(idyn .eq. 4) then
-        write(6,999)
-     .  'hybrid: Kinetic Energy (eV):',Ekinion/eV
-        write(6,999)
-     .  'hybrid: Total Energy + Kinetic (eV):',(Etots+Ekinion)/eV
-        write(6,999)
-     .  'hybrid: System Temperature:', tempion, ' K'
-!      if(qm) call centerdyn(na_u,rclas,ucell,natot)
-c	if (MOD((istp - inicoor),traj_frec) .eq. 1) 
-      call wrirtc(slabel,Etots,dble(istp),istp,na_u,nac,natot,
-     .      rclas,atname,aaname,aanum,nesp,atsym,isa)
-
-       endif
-
-
 
 !Nick center
         if (qm .and. .not. mm .and. Nick_cent) then
@@ -860,9 +859,7 @@ c	if (MOD((istp - inicoor),traj_frec) .eq. 1)
 
 
       if (idyn .eq. 1 ) then !Move atoms in a NEB scheme
-
 	if (writeRF .eq. 1) then!save coordinates and forces for integration 
-
 	  open(unit=969, file="Pos_forces.dat")
 	  do replica_number = NEB_firstimage, NEB_lastimage ! Band Replicas
 	    do itest=1, natot
@@ -877,6 +874,7 @@ c	if (MOD((istp - inicoor),traj_frec) .eq. 1)
 
 
 	call NEB_save_traj_energy()
+!	Energy_band=0.d0 !test
 	call NEB_steep(istep, relaxd) 
 
 ! Calculation Hlink's New positions 
@@ -947,7 +945,7 @@ c	if (MOD((istp - inicoor),traj_frec) .eq. 1)
 
 
 ! properties calculation in lio for optimized geometry
-      if (idyn .ne. 1 .and. qm) then
+      if (idyn .ne. 1) then
       do_properties=.true.
       call SCF_hyb(na_u, at_MM_cut_QMMM, r_cut_QMMM, Etot,
      .     F_cut_QMMM,
@@ -988,7 +986,6 @@ c	if (MOD((istp - inicoor),traj_frec) .eq. 1)
  956  format(2x, "Econtribution", 7(f18.6,2x))
  423  format(2x, I6,2x, 6(f20.10,2x))
  444  format(2x, I6,2x, 3(f20.10,2x))
- 999  format(a,2x,F30.18)
       end program HYBRID
 
 
