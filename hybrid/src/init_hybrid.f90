@@ -19,7 +19,7 @@
 	atdihm, bondxat, angexat, dihexat, dihmxat, angmxat, impxat, atimp, &
 	xa, fa, isa, iza, atsym, charge, spin, writeRF, frstme, &
 	Ndescend, alpha, NEB_time_steep, NEB_alpha,NEB_Ndescend, time_steep, &
-	NEB_move_method, Ndamped
+	NEB_move_method, Ndamped, inner_blo, inner_freeze_list
 	
 	implicit none
 	character(len=*), intent(in) :: init_type

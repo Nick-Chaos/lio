@@ -123,7 +123,7 @@ C  Modules
       use fdf
       use sys
       use scarlett, only: NEB_move_method, NEB_spring_constant,
-     .   NEB_Nimages, time_steep, time_steep_max
+     .   NEB_Nimages, time_steep, time_steep_max, inner_blo
 
       implicit none
 
@@ -249,6 +249,9 @@ C Tolerance in the maximum atomic force (def 0.04 eV/Ang)
 
 C re-Center system
       Nick_cent = fdf_boolean('CG.Nick_center', .false.)
+C inner freeze
+	inner_blo = fdf_integer('FreezeInner',0)
+
 
       if (idyn .eq. 0) then
         write(6,'(a,i5)') 

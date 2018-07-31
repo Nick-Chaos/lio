@@ -70,7 +70,7 @@ c si el argumento da mal (m*n)=0.0 avisa y sale el dihe vale 500.0
         if(arg.ge.1.0d0) then
 	dihedro= 0.d0
 	elseif (arg.le.-1.d0) then
-	dihedro=180.d0
+	dihedro=pi
 	else
         dihedro = dACOS(arg)
 	endif

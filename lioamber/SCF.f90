@@ -351,7 +351,6 @@ subroutine SCF(E)
           call g2g_timer_sum_stop('QM/MM')
       endif
 
-
 ! test
 ! TODO: test? remove or sistematize
 !
@@ -360,7 +359,6 @@ subroutine SCF(E)
         E1=E1+RMM(kk)*RMM(M11+kk-1)
       enddo
       call g2g_timer_sum_stop('1-e Fock')
-
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
 ! OVERLAP DIAGONALIZATION
@@ -377,6 +375,7 @@ subroutine SCF(E)
         if ( allocated(Xmat) ) deallocate(Xmat)
         if ( allocated(Ymat) ) deallocate(Ymat)
         allocate(Xmat(M_in,M_in), Ymat(M_in,M_in))
+
 
         call overop%Sets_smat( Smat )
         if (lowdin) then
@@ -416,7 +415,6 @@ subroutine SCF(E)
         call fockbias_setmat( tmpmat )
         deallocate( sqsmat, tmpmat )
 
-
 !DFTB: Dimensions of Xmat and Ymat are modified for DFTB.
 !
 ! TODO: this is nasty, a temporary solution would be to have a Msize variable
@@ -438,11 +436,9 @@ subroutine SCF(E)
 
       end if
 
-
 ! CUBLAS
    call cublas_setmat( M_in, Xmat, dev_Xmat)
    call cublas_setmat( M_in, Ymat, dev_Ymat)
-
 
 ! Generates starting guess
 !
@@ -468,7 +464,6 @@ subroutine SCF(E)
         return
       endif
 
-
 !----------------------------------------------------------!
 ! Precalculate two-index (density basis) "G" matrix used in density fitting
 ! here (S_ij in Dunlap, et al JCP 71(8) 1979) into RMM(M7)
@@ -482,6 +477,7 @@ subroutine SCF(E)
 ! used in density fitting / Coulomb F element calculation here
 ! (t_i in Dunlap)
 !
+
       call aint_query_gpu_level(igpu)
       if (igpu.gt.2) then
         call aint_coulomb_init()

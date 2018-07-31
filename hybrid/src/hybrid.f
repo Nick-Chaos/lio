@@ -49,6 +49,7 @@
      . r_cut_list_QMMM,blocklist,blockqmmm,
      . listqmmm,MM_freeze_list, natoms_partial_freeze, 
      . natoms_partial_freeze, coord_freeze, 
+     . inner_blo, inner_freeze_list,
 !NEB
      . NEB_Nimages, 
      . NEB_firstimage, NEB_lastimage,  
@@ -62,7 +63,7 @@
 !FIRE
      . time_steep, Ndescend, time_steep_max, alpha,
 !Lio
-     . charge, spin,
+     . charge, spin, do_SCF, do_QM_forces, do_properties, 
 !outputs
      . writeRF, slabel
 
@@ -123,9 +124,6 @@
       double precision :: radbloqmmm ! distance that allow to move MM atoms from QM sub-system
       double precision :: radblommbond !parche para omitir bonds en extremos terminales, no se computan bonds con distancias mayores a radblommbond
       logical ::  recompute_cuts
-! Lio
-      logical :: do_SCF, do_QM_forces !control for make new calculation of rho, forces in actual step
-      logical :: do_properties !control for lio properties calculation
 
 ! Optimization scheme
       integer :: opt_scheme ! turn on optimization scheme
@@ -283,6 +281,17 @@
       call read_md( idyn, nmove, dt, dxmax, ftol, 
      .              usesavecg, usesavexv , Nick_cent, na_u,  
      .              natot, nfce, wricoord, mmsteps)
+
+
+          write(*,*) "inner_blo", inner_blo
+	  inner_blo=inner_blo*Ang
+          if (inner_blo .gt. 0) then
+	    allocate(inner_freeze_list(natot))
+	    inner_freeze_list=.false.
+	    do_SCF=.false.
+	    do_QM_forces=.false.
+	  end if
+
 
 ! Assignation of masses and species 
       call assign(na_u,nac,atname,iza,izs,masst)
@@ -461,7 +470,12 @@
 	do replica_number = NEB_firstimage, NEB_lastimage      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Band Replicas
 	  if (idyn .eq.1) then
 	    rclas(1:3,1:natot)=rclas_BAND(1:3,1:natot,replica_number)
+	    vat(1:3,1:natot)=vclas_BAND(1:3,1:natot,replica_number)
 	  end if
+
+!test
+!	           call wrirtc(slabel,Etots,rt(1),istepconstr,na_u,nac,natot,
+!     .             rclas,atname,aaname,aanum,nesp,atsym,isa)
 
 
 ! Calculate Energy and Forces using Lio as Subroutine
@@ -485,6 +499,22 @@
 		  MM_freeze_list(i_qm)=.false.
 		end do
 	    end if
+
+	    if ((inner_blo).gt.0) then !solo para test
+		inner_freeze_list=.false.
+	      do i_qm=1,na_u
+		inner_freeze_list(i_qm)=.true.
+	      end do
+	      do i_mm=1, nac
+		do i_qm=1,na_u
+		  r12=(rclas(1,i_qm)-rclas(1,i_mm+na_u))**2.d0 +
+     .              (rclas(2,i_qm)-rclas(2,i_mm+na_u))**2.d0 +
+     .              (rclas(3,i_qm)-rclas(3,i_mm+na_u))**2.d0
+		  if (r12 .lt. inner_blo**2) inner_freeze_list(na_u+i_mm)=.true.
+		end do
+	      end do
+	    end if
+
 
 	    do i_mm=1, nac !MM atoms
 	      i_qm=0
@@ -694,14 +724,27 @@ c return forces to fullatom arrays
         do inick=1, natot
           if(MM_freeze_list(inick)) then
             cfdummy(1:3,inick) = 0.d0
+	    vat(1:3, inick) = 0.d0
           end if
         end do
+! freeze inner atoms
+	if (inner_blo .gt. 1) then
+	  write(*,*) "Warning: Freezin atoms at: ", inner_blo, "of QM"
+	  do inick=1, natot
+	    if (inner_freeze_list(inick)) then
+	      cfdummy(1:3,inick) = 0.d0
+	      vat(1:3, inick) = 0.d0
+	    end if
+	  end do
+	end if
+
 
 ! partial freeze
 	do inick=1,natoms_partial_freeze
 	  do jnick=1,3
 	    if (coord_freeze(inick,1+jnick) .eq. 1) then
 	      cfdummy(jnick,coord_freeze(inick,1))=0.d0
+	      vat(jnick, coord_freeze(inick,1)) = 0.d0
 	    end if
 	  end do
 	enddo
@@ -816,9 +859,7 @@ C Write atomic forces
 
 
       if (idyn .eq. 1 ) then !Move atoms in a NEB scheme
-
 	if (writeRF .eq. 1) then!save coordinates and forces for integration 
-
 	  open(unit=969, file="Pos_forces.dat")
 	  do replica_number = NEB_firstimage, NEB_lastimage ! Band Replicas
 	    do itest=1, natot
@@ -833,6 +874,7 @@ C Write atomic forces
 
 
 	call NEB_save_traj_energy()
+!	Energy_band=0.d0 !test
 	call NEB_steep(istep, relaxd) 
 
 ! Calculation Hlink's New positions 

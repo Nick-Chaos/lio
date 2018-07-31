@@ -29,14 +29,19 @@
 ! Cut Off & freeeze variables 
 	integer, allocatable, dimension(:) :: r_cut_list_QMMM
 	logical, allocatable, dimension(:) :: MM_freeze_list
+	logical, allocatable, dimension(:) :: inner_freeze_list
 	integer :: natoms_partial_freeze !number of atoms with 0 force in any direction
 	integer,  allocatable, dimension(:,:) :: coord_freeze !cartesian direction with force = 0
-
+	integer :: inner_blo
 
 ! Cut Off QM-MM variables
 	integer, dimension(:), allocatable, save:: blocklist,blockqmmm,listqmmm
 !listas para congelar atomos, hay q reveer estas subrutinas, por ahora estoy usando mis subrutinas, nick
 
+
+! Lio
+      logical :: do_SCF, do_QM_forces !control for make new calculation of rho, forces in actual step
+      logical :: do_properties !control for lio properties calculation
 
 
 
