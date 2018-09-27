@@ -60,11 +60,11 @@ subroutine write_energies(E1, E2, En, Ens, Eecp, Exc, ecpmode, E_restrain, &
    else
       write(*,*)
       write(*,'(A)') "Final Energy Contributions in A.U."
-      write(*,'(A,F12.6)') "  Total energy = ", E1 + E2 + En + Ens + Exc
-      write(*,'(A,F12.6)') "  One electron = ", E1 - Eecp
-      write(*,'(A,F12.6)') "  Coulomb      = ", E2
-      write(*,'(A,F12.6)') "  Nuclear      = ", En
-      write(*,'(A,F12.6)') "  Exch. Corr.  = ", Exc
+      write(*,'(A,F18.6)') "  Total energy = ", E1 + E2 + En + Ens + Exc
+      write(*,'(A,F18.6)') "  One electron = ", E1 - Eecp
+      write(*,'(A,F18.6)') "  Coulomb      = ", E2
+      write(*,'(A,F18.6)') "  Nuclear      = ", En
+      write(*,'(A,F18.6)') "  Exch. Corr.  = ", Exc
       if (nsol .gt. 0) write(*,'(A,F12.6)') "  QM-MM energy = ", Ens
       if (ecpmode)     write(*,'(A,F12.6)') "  ECP energy   = ", Eecp
       if (number_restr .gt. 0) &

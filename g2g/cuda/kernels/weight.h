@@ -13,6 +13,7 @@ __global__ void gpu_compute_weights(uint points,
   __shared__ uint nucleii_sh[MAX_ATOMS];
   __shared__ scalar_type rm_sh[MAX_ATOMS];
 
+
   for (uint i = 0; i < gpu_atoms; i += WEIGHT_BLOCK_SIZE) {
     if (i + threadIdx.x < gpu_atoms) {
       vec_type<scalar_type, 4> atom_position_rm_local(

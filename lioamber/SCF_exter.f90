@@ -197,7 +197,12 @@ subroutine SCF_hyb (hyb_natom, mm_natom, hyb_r, E, fdummy, Iz_cl,do_SCF, do_QM_f
     integer :: i,j !auxiliar
     logical, intent(in) :: do_SCF, do_QM_forces !SCF & forces control variable
     logical, intent(in) :: do_properties !properties control
+!test
+    integer :: ii
+    double precision :: dist
 
+    if (allocated(fa)) deallocate (fa)
+    if (allocated(fmm)) deallocate (fmm)
     allocate(fa(3,hyb_natom), fmm(3,mm_natom))
     calc_propM = do_properties
 
@@ -219,11 +224,32 @@ subroutine SCF_hyb (hyb_natom, mm_natom, hyb_r, E, fdummy, Iz_cl,do_SCF, do_QM_f
     do i=1, ntatom
       do j=1, 3
         r(i,j)=hyb_r(j,i)
+!        if (i .gt. hyb_natom) r(i,j)=r(i,j)+8000.d0
         if (i .le. hyb_natom) rqm(i,j)=hyb_r(j,i) !positions on QM subsystem
       enddo
         if (i .le. hyb_natom) pc(i)= Iz(i) !nuclear charge
-        if (i .gt. hyb_natom) pc(i) = Iz_cl(i-hyb_natom) ! MM force-field charge
+        if (i .gt. hyb_natom) pc(i) = 0.d0
+!Iz_cl(i-hyb_natom) ! MM force-field charge
+        write(5796,331) pc(i), hyb_r(1:3,i)
     end do
+
+
+
+    do i=1, ntatom
+      do ii=1, ntatom
+        if (i.ne.ii) then
+          dist=0.d0
+          do j=1, 3
+            dist=dist+(hyb_r(j,i)-hyb_r(j,ii))**2
+          end do
+          if (dist .lt. 1.d0) then 
+            write(*,*) i, ii, "muy cerca", dist
+            if (i.gt.70) r(i,1)=r(i,1)+700.d0
+          end if
+        end if
+      end do
+    end do
+
 
 ! Calls main procedures.
 
@@ -233,11 +259,15 @@ subroutine SCF_hyb (hyb_natom, mm_natom, hyb_r, E, fdummy, Iz_cl,do_SCF, do_QM_f
     fa=0.d0
     fmm=0.d0
 
+        write(*,*) "TF1"
     if (do_QM_forces) then
       call  dft_get_qm_forces(fa)
+        write(*,*) "TF2"
       call  dft_get_mm_forces(fmm,fa)
+        write(*,*) "TF3"
     end if
 
+        write(*,*) "TF4"
     fa=-1.d0*fa  ! - change gradient to forces 
                  ! 2 change units for hybrid
     fmm=-1.d0*fmm
@@ -251,5 +281,8 @@ subroutine SCF_hyb (hyb_natom, mm_natom, hyb_r, E, fdummy, Iz_cl,do_SCF, do_QM_f
       end do
     end do
 
+        deallocate(fa, fmm)
+        write(*,*) "TF5"
     return
+ 331 FORMAT(2x,4(f18.6))
 end  subroutine SCF_hyb

@@ -147,6 +147,7 @@ bool is_big_group(const T& points) {
   assert(G2G::cpu_threads > 0 || G2G::gpu_threads > 0);
   if (G2G::cpu_threads == 0) return true;
   if (G2G::gpu_threads == 0) return false;
+//  cout << "is_big_group" << points.size() << " "<< G2G::SPLITPOINTS << endl;
   return (points.size() > G2G::SPLITPOINTS);
 }
 
@@ -163,6 +164,7 @@ void Partition::regenerate(void) {
   // Determina el exponente minimo para cada tipo de atomo.
   // uno por elemento de la tabla periodica.
   vector<double> min_exps(120, numeric_limits<double>::max());
+//   cout << "Cregenerate 1" << endl;
   for (uint i = 0; i < fortran_vars.m; i++) {
     uint contractions = fortran_vars.contractions(i);
     uint nuc = fortran_vars.nucleii(i) - 1;
@@ -172,6 +174,7 @@ void Partition::regenerate(void) {
     }
   }
 
+//   cout << "Cregenerate 2" << endl;
   // Un exponente y un coeficiente por funcion.
   vector<double> min_exps_func(fortran_vars.m, numeric_limits<double>::max());
   vector<double> min_coeff_func(fortran_vars.m);
@@ -184,7 +187,7 @@ void Partition::regenerate(void) {
       }
     }
   }
-
+//   cout << "Cregenerate 3" << endl;
   // Encontrando el prisma conteniendo el sistema.
   double3 x0 = make_double3(0, 0, 0);
   double3 x1 = make_double3(0, 0, 0);
@@ -211,12 +214,15 @@ void Partition::regenerate(void) {
     }
   }
 
+//   cout << "Cregenerate 4" << endl;
   // El prisma tiene vertices (x,y), con x0 el vertice inferior, izquierdo y mas
   // lejano
   // y x1 el vertice superior, derecho y mas cercano.
 
   // Generamos la particion en cubos.
   uint3 prism_size = ceil_uint3((x1 - x0) / little_cube_size);
+
+//   cout << "Cregenerate 5" << endl;
 
   typedef vector<Point> Group;
   vector<vector<vector<Group> > > prism(
@@ -247,6 +253,8 @@ void Partition::regenerate(void) {
     }
   }
 
+//   cout << "Cregenerate 6" << endl;
+
   // Precomputamos las distancias entre atomos.
   for (uint i = 0; i < fortran_vars.atoms; i++) {
     const double3& atom_i_position(fortran_vars.atom_positions(i));
@@ -260,6 +268,8 @@ void Partition::regenerate(void) {
     }
     fortran_vars.nearest_neighbor_dists(i) = nearest_neighbor_dist;
   }
+
+//   cout << "Cregenerate 6" << endl;
 
   // Computamos los puntos y los asignamos a los cubos y esferas.
   uint puntos_totales = 0;
@@ -321,9 +331,14 @@ void Partition::regenerate(void) {
     }
   }
 
+//	   cout << "Cregenerate 7" << endl;
+
   G2G::MINCOST = getintenv("LIO_MINCOST_OFFSET", 250000);
   G2G::THRESHOLD = getintenv("LIO_SPLIT_THRESHOLD", 80);
   G2G::SPLITPOINTS = getintenv("LIO_SPLIT_POINTS", 200);
+//cambie 200 a 500
+
+//	   cout << "Cregenerate 8" << endl;
 
   // La grilla computada ahora tiene |puntos_totales| puntos, y |fortran_vars.m|
   // funciones.
@@ -332,13 +347,40 @@ void Partition::regenerate(void) {
 
   puntos_finales = 0;
   // Completamos los parametros de los cubos y los agregamos a la particion.
+//     cout << "Cregenerate 10" << endl;
+
   for (uint i = 0; i < prism_size.x; i++) {
     for (uint j = 0; j < prism_size.y; j++) {
       for (uint k = 0; k < prism_size.z; k++) {
+
+//	cout << i << j << k << endl;
+
+/*	if ( i < 2) {
+          cout << "flag i 1" << endl;
+        }
+*/
         Group& points_ijk = prism[i][j][k];
 
+/*        if ( i < 2) {
+          cout << "flag i 2" << endl;
+        }
+*/
+
         double3 cube_coord_abs = x0 + make_uint3(i, j, k) * little_cube_size;
+
+/*        if ( i < 2) {
+          cout << "flag i 3" << endl;
+        }
+*/
+
         PointGroup<base_scalar_type>* cube_funcs;
+
+
+/*        if ( i < 2) {
+          cout << "flag i 4" << endl;
+        }
+*/
+
 #if GPU_KERNELS
         if (is_big_group(points_ijk))
           cube_funcs = new PointGroupGPU<base_scalar_type>();
@@ -348,54 +390,157 @@ void Partition::regenerate(void) {
         cube_funcs = new PointGroupCPU<base_scalar_type>();
 #endif
 
+
+/*        if ( i < 2) {
+          cout << "flag i 5" << endl;
+        }
+*/
+
         for (uint point = 0; point < prism[i][j][k].size(); point++)
           cube_funcs->add_point(prism[i][j][k][point]);
 
+/*	if ( i < 2) {
+          cout << "flag ipoint 1" << endl;
+        }
+*/
         cube_funcs->assign_functions_as_cube(cube_coord_abs, min_exps_func,
                                              min_coeff_func);
 
+/*        if ( i < 2) {
+          cout << "flag ipoint 2" << endl;
+        }
+*/
         if ((cube_funcs->total_functions_simple() == 0) ||
             (cube_funcs->number_of_points < min_points_per_cube)) {
           // Este cubo no tiene funciones o no tiene suficientes puntos.
+/*          if ( i < 2) {
+          cout << "flag ipoint 2.1" << endl;
+          }
+*/
           delete cube_funcs;
+ /*         if ( i < 2) {
+          cout << "flag ipoint 2.2" << endl;
+          }
+*/
           continue;
+/*          if ( i < 2) {
+          cout << "flag ipoint 2.3" << endl;
+          }
+*/
         }
+
+/*        if ( i < 2) {
+          cout << "flag i 6" << endl;
+        }
+*/
+
         PointGroup<base_scalar_type>* cube;
 
+/*        if ( i < 2) {
+          cout << "flag i 7" << endl;
+        }
+*/
+
 #if GPU_KERNELS
-        if (is_big_group(points_ijk))
+        if (is_big_group(points_ijk)){
+//	cout << "flag i 7.1" << endl;
           cube = new PointGroupGPU<base_scalar_type>(
               *(static_cast<PointGroupGPU<base_scalar_type>*>(cube_funcs)));
-        else
+        } else {
+
+//	cout << "flag i 7.2" << endl;
           cube = new PointGroupCPU<base_scalar_type>(
               *(static_cast<PointGroupCPU<base_scalar_type>*>(cube_funcs)));
+        }
 #else
+//	cout << "flag i 7.3" << endl;
         cube = new PointGroupCPU<base_scalar_type>(
             *(static_cast<PointGroupCPU<base_scalar_type>*>(cube_funcs)));
 #endif
 
+/*        if ( i < 2) {
+          cout << "flag i 8" << endl;
+        }
+*/
         delete cube_funcs;
 
+/*        if ( i < 2) {
+          cout << "flag i 9" << endl;
+        }
+*/
         tweights.start();
+
+/*        if ( i < 2) {
+          cout << "flag i 10" << endl;
+          cout << is_big_group(points_ijk) << endl;
+        }
+*/
+//aca pincha
         cube->compute_weights();
+
+/*        if ( i < 2) {
+          cout << "flag i 11" << endl;
+        }
+*/
         tweights.pause();
 
+/*        if ( i < 2) {
+          cout << "flag i 12" << endl;
+        }
+*/
         if (cube->number_of_points < min_points_per_cube) {
-          cout << "CUBE: not enough points" << endl;
+//          cout << "CUBE: not enough points" << endl;
           delete cube;
           continue;
         }
+
+/*        if ( i < 2) {
+          cout << "flag i 13" << endl;
+        }
+*/
         cubes.push_back(cube);
 
+/*        if ( i < 2) {
+          cout << "flag i 14" << endl;
+        }
+*/
         puntos_finales += cube->number_of_points;
+
+/*        if ( i < 2) {
+          cout << "flag i 15" << endl;
+        }
+*/
         funciones_finales += cube->number_of_points * cube->total_functions();
+
+/*        if ( i < 2) {
+          cout << "flag i 16" << endl;
+        }
+*/
         costo += cube->number_of_points *
                  (cube->total_functions() * cube->total_functions());
+
+/*        if ( i < 2) {
+          cout << "flag i 17" << endl;
+        }
+*/
         nco_m += cube->total_functions() * fortran_vars.nco;
+
+/*        if ( i < 2) {
+          cout << "flag i 18" << endl;
+        }
+*/
         m_m += cube->total_functions() * cube->total_functions();
+
+
+/*        if ( i < 2) {
+          cout << "flag i 19" << endl;
+        }
+*/
       }
     }
   }
+
+//	   cout << "Cregenerate 11" << endl;
 
   // Si esta habilitada la particion en esferas, entonces clasificamos y las
   // agregamos a la particion tambien.
@@ -420,7 +565,7 @@ void Partition::regenerate(void) {
                                                min_exps_func, min_coeff_func);
       assert(sphere_funcs->total_functions_simple() != 0);
       if (sphere_funcs->number_of_points < min_points_per_cube) {
-        cout << "not enough points" << endl;
+//        cout << "not enough points" << endl;
         delete sphere_funcs;
         continue;
       }
@@ -445,7 +590,7 @@ void Partition::regenerate(void) {
       sphere->compute_weights();
       tweights.pause();
       if (sphere->number_of_points < min_points_per_cube) {
-        cout << "not enough points" << endl;
+//        cout << "not enough points" << endl;
         delete sphere;
         continue;
       }
@@ -461,36 +606,48 @@ void Partition::regenerate(void) {
     }
   }
 
+//	   cout << "Cregenerate 12" << endl;
+
+
   // TODO fix these sorts now that spheres and cubes are pointers
   sort(spheres.begin(), spheres.end(), Sorter());
+
+//	cout << "Cregenerate 12.1" << endl;
   sort(cubes.begin(), cubes.end(), Sorter());
 
+//	cout << "Cregenerate 12.2" << endl;
   // Initialize the global memory pool for CUDA, with the default safety factor
   // If it is CPU, then this doesn't matter
   GlobalMemoryPool::init(G2G::free_global_memory);
 
+//	cout << "Cregenerate 12.3" << endl;
   if (timer_single) cout << "  Weights: " << tweights << endl;
 
+//	cout << "Cregenerate 12.4" << endl;
   for (uint i = 0; i < cubes.size(); i++) {
     cubes[i]->compute_indexes();
   }
+//	cout << "Cregenerate 12.5" << endl;
   for (uint i = 0; i < spheres.size(); i++) {
     spheres[i]->compute_indexes();
   }
 
+//	cout << "Cregenerate 12.6" << endl;
   compute_work_partition();
-
+//	cout << "Cregenerate 12.7" << endl;
   timeforgroup.resize(cubes.size() + spheres.size());
+//	cout << "Cregenerate 12.8" << endl;
   next.resize(G2G::cpu_threads + G2G::gpu_threads);
-
+//	cout << "Cregenerate 12.9" << endl;
   fort_forces_ms.resize(G2G::cpu_threads + G2G::gpu_threads);
+//	cout << "Cregenerate 12.10" << endl;
   if (!fortran_vars.OPEN) {
     rmm_outputs.resize(G2G::cpu_threads + G2G::gpu_threads);
   } else {
     rmm_outputs_a.resize(G2G::cpu_threads + G2G::gpu_threads);
     rmm_outputs_b.resize(G2G::cpu_threads + G2G::gpu_threads);
   };
-
+//	cout << "Cregenerate 12.11" << endl;
   for (int i = 0; i < G2G::cpu_threads + G2G::gpu_threads; i++) {
     fort_forces_ms[i].resize(fortran_vars.max_atoms, 3);
     if (fortran_vars.OPEN) {
@@ -503,6 +660,10 @@ void Partition::regenerate(void) {
                             fortran_vars.rmm_output.height);
     }
   }
+
+//	   cout << "Cregenerate 13" << endl;
+
+
   int current_gpu = 0;
   for (int i = work.size(); i < G2G::cpu_threads + G2G::gpu_threads; i++)
     work.push_back(vector<int>());
