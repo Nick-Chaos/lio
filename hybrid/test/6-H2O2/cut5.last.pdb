@@ -1,6 +1,6 @@
-ATOM      1  O   STO A   1      -0.259  -0.238  -1.171
-ATOM      2  O   STO A   2      -0.078  -0.340   1.171
-ATOM      3  H   STO A   3       0.690  -0.514  -1.112
-ATOM      4  H   STO A   4      -0.781   0.352   1.109
+ATOM      1  O   STO A   1       0.221  -0.338  -2.519
+ATOM      2  O   STO A   2      -0.305  -0.122   2.446
+ATOM      3  H   STO A   3       0.438  -0.494  -1.557
+ATOM      4  H   STO A   4      -0.792   0.209   1.651
 
-END  363
+END  674

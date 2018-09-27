@@ -212,7 +212,7 @@ subroutine SCF(E)
    call g2g_timer_sum_start('SCF')
    call g2g_timer_sum_start('Initialize SCF')
 
-
+!        write(*,*) "flag 1"
    npas=npas+1
    E=0.0D0
    E1=0.0D0
@@ -285,6 +285,7 @@ subroutine SCF(E)
           return
        end if
 
+!        write(*,*) "flag 2"
 
 !------------------------------------------------------------------------------!
 ! TODO: damp and gold should no longer be here??
@@ -335,6 +336,8 @@ subroutine SCF(E)
         return
       endif
 
+!        write(*,*) "flag 3"
+
 !
 ! -Create integration grid for XC here
 ! -Assign points to groups (spheres/cubes)
@@ -342,11 +345,20 @@ subroutine SCF(E)
 ! -Calculate point weights
 !
       call g2g_timer_sum_start('Exchange-correlation grid setup')
+!    write(*,*) "flag 3.0.1"
+
       call g2g_reload_atom_positions(igrid2)
+!    write(*,*) "flag 3.0.2"
+
       call g2g_timer_sum_stop('Exchange-correlation grid setup')
 
+!        write(*,*) "flag 3.1"
       call aint_query_gpu_level(igpu)
+!        write(*,*) "flag 3.2"
       if (igpu.gt.1) call aint_new_step()
+
+!        write(*,*) "flag 4"
+
 
 ! Calculate 1e part of F here (kinetic/nuc in int1, MM point charges
 ! in intsol)
@@ -356,6 +368,8 @@ subroutine SCF(E)
       call int1(En, RMM(M5:M5+MM), RMM(M11:M11+MM), Smat, d, r, Iz, natom, &
                 ntatom)
       call ECP_fock( MM, RMM(M11) )
+
+!        write(*,*) "flag 5"
 
 
 ! Other terms
@@ -376,6 +390,8 @@ subroutine SCF(E)
         endif
           call g2g_timer_sum_stop('QM/MM')
       endif
+
+!        write(*,*) "flag 6"
 
 ! test
 ! TODO: test? remove or sistematize
@@ -404,6 +420,8 @@ subroutine SCF(E)
         allocate(Xmat(M_in,M_in), Ymat(M_in,M_in))
 
 
+!        write(*,*) "flag 7"
+
         call overop%Sets_smat( Smat )
         if (lowdin) then
 !          TODO: inputs insuficient; there is also the symetric orthog using
@@ -412,6 +430,8 @@ subroutine SCF(E)
         else
            call overop%Gets_orthog_4m( 1, 0.0d0, X_min, Y_min, X_min_trans, Y_min_trans)
         end if
+
+!        write(*,*) "flag 8"
 
 ! TODO: replace X,Y,Xtrans,Ytrans with Xmat, Ymat, Xtrp, Ytrp
 !        do ii=1,M
@@ -575,7 +595,7 @@ subroutine SCF(E)
 !       Test for NaN
         if (Dbug) call SEEK_NaN(RMM,1,MM,"RHO Start")
         if (Dbug) call SEEK_NaN(RMM,M5-1,M5-1+MM,"FOCK Start")
-
+!        if (niter.eq.1) write(640,*) RMM(M5-1:M5-1+MM)
 !       Computes Coulomb part of Fock, and energy on E2
         call g2g_timer_sum_start('Coulomb fit + Fock')
         call int3lu(E2, RMM(1:MM), RMM(M3:M3+MM), RMM(M5:M5+MM), &
@@ -585,6 +605,7 @@ subroutine SCF(E)
 !       Test for NaN
         if (Dbug) call SEEK_NaN(RMM,1,MM,"RHO Coulomb")
         if (Dbug) call SEEK_NaN(RMM,M5-1,M5-1+MM,"FOCK Coulomb")
+!        if (niter.eq.1) write(641,*) RMM(M5-1:M5-1+MM)
 
 !       XC integration / Fock elements
         call g2g_timer_sum_start('Exchange-correlation Fock')
@@ -594,7 +615,9 @@ subroutine SCF(E)
 !       Test for NaN
         if (Dbug) call SEEK_NaN(RMM,1,MM,"RHO Ex-Corr")
         if (Dbug) call SEEK_NaN(RMM,M5-1,M5-1+MM,"FOCK Ex-Corr")
+!        if (niter.eq.1) write(642,*) RMM(M5-1:M5-1+MM)
 
+!        if (niter.eq.3) STOP "niter 3"
 !------------------------------------------------------------------------------!
 ! REACTION FIELD CASE
 !
@@ -901,6 +924,7 @@ subroutine SCF(E)
         Evieja=E+Ex
 
         ! Write energy at every step
+        write(*,*) "Ene", E1, E2, En, Ens, Exc, E_restrain
         call write_energy_convergence(niter, Evieja, good, told, egood, etold)
 
         call g2g_timer_stop('Total iter')
@@ -911,7 +935,9 @@ subroutine SCF(E)
 
 !------------------------------------------------------------------------------!
 !     Checks of convergence
-!
+!a
+
+        write(*,*) "SCF F1"
       if (niter.ge.NMAX) then
          call write_final_convergence(.false., NMAX, Evieja)
          noconverge = noconverge + 1
@@ -922,11 +948,15 @@ subroutine SCF(E)
          converge   = converge + 1
       endif
 
+        write(*,*) "SCF F2"
+
       if (changed_to_LS) then
          changed_to_LS=.false.
          NMAX=NMAX/2
          Rho_LS=0
       end if
+
+        write(*,*) "SCF F3"
 
       if (noconverge.gt.4) then
          write(6,'(A)')  'FATAL ERROR - No convergence achieved 4 times.'
@@ -935,6 +965,8 @@ subroutine SCF(E)
 !------------------------------------------------------------------------------!
 
 !DFTB: Mulliken analysis of TB part
+
+        write(*,*) "SCF F4"
 
   if (dftb_calc) then
 
@@ -959,15 +991,22 @@ subroutine SCF(E)
 
   end if
 
+        write(*,*) "SCF F5"
+
 !DFTB: The last rho is stored in an output as a restart.
    if (dftb_calc.and.TBsave) call write_rhoDFTB(M_in, OPEN)
+
+        write(*,*) "SCF F6"
    if (MOD(npas,energy_freq).eq.0) then
 !       Resolve with last density to get XC energy
         call g2g_timer_sum_start('Exchange-correlation energy')
+        write(*,*) "SCF F6.1"
         call g2g_new_grid(igrid)
+        write(*,*) "SCF F6.2"
         call g2g_solve_groups(1, Exc, 0)
+        write(*,*) "SCF F6.3"
         call g2g_timer_sum_stop('Exchange-correlation energy')
-
+        write(*,*) "SCF F6.4"
 !       COmputing the QM/MM contribution to total energy
 !       Total SCF energy =
 !       E1   - kinetic + nuclear attraction + QM/MM interaction + effective
@@ -986,12 +1025,18 @@ subroutine SCF(E)
         call int1(En, RMM(M5:M5+MM), RMM(M11:M11+MM), Smat, d, r, Iz, natom, &
                   ntatom)
 
+        write(*,*) "SCF F6.5"
 !       Computing the E1-fock without the MM atoms
         if (nsol.gt.0.and.igpu.ge.1) then
+        write(*,*) "SCF F6.6"
           call aint_qmmm_init(0,r,pc)
+        write(*,*) "SCF F6.7"
           call aint_qmmm_fock(E1s,Etrash)
+        write(*,*) "SCF F6.8"
           call aint_qmmm_init(nsol,r,pc)
+        write(*,*) "SCF F6.9"
         endif
+        write(*,*) "SCF F6.10"
 
 !       E1s (here) is the 1e-energy without the MM contribution
         E1s=0.D0
@@ -1005,7 +1050,7 @@ subroutine SCF(E)
 !       Part of the QM/MM contrubution are in E1
         E=E1+E2+En+Ens+Exc+E_restrain
 
-
+        write(*,*) "SCF F6.11"
 
 !       Write Energy Contributions
         if (npas.eq.1) npasw = 0
@@ -1018,7 +1063,7 @@ subroutine SCF(E)
         end if
       endif ! npas
 
-
+        write(*,*) "SCF F7"
 !------------------------------------------------------------------------------!
 ! calculation of energy weighted density matrix
 !
@@ -1044,10 +1089,12 @@ subroutine SCF(E)
       enddo
       enddo
 
+        write(*,*) "SCF F8"
       call g2g_timer_sum_stop('energy-weighted density')
 
       call cubegen_matin( M, X )
 
+        write(*,*) "SCF F9"
    if (gaussian_convert) then       ! Density matrix translation from Gaussian09
       allocate(rho_exc(M,M))
       call translation(M,rho_exc)   ! Reorganizes Rho to LIO format.
@@ -1061,7 +1108,7 @@ subroutine SCF(E)
 
       deallocate(rho_exc)
    endif                            ! End of translation
-
+        write(*,*) "SCF F10"
 
 !------------------------------------------------------------------------------!
 ! TODO: have ehrendyn call SCF and have SCF always save the resulting rho in
@@ -1074,7 +1121,7 @@ subroutine SCF(E)
          call ehrendyn_init(natom, M, RealRho)
       endif
 
-
+        write(*,*) "SCF F11"
 !------------------------------------------------------------------------------!
 ! TODO: Deallocation of variables that should be removed
 ! TODO: MEMO should be handled differently...
@@ -1084,7 +1131,7 @@ subroutine SCF(E)
         deallocate(cool,cools)
       endif
 
-
+        write(*,*) "SCF F12"
 !------------------------------------------------------------------------------!
 ! TODO: Why is TD being called again?? In any case have TD call SCF as a first
 !       step to obtain the first density...
@@ -1099,16 +1146,18 @@ subroutine SCF(E)
         call g2g_timer_sum_stop('TD')
       endif
 
-
+        write(*,*) "SCF F13"
 !------------------------------------------------------------------------------!
 ! TODO: Cublas should be handled differently. Hidden behind SOP type and an
 !       interface or general endstep call that takes care of cublas_shutdown
 !       and all other similar stuff.
 !
       call cublas_release( dev_Xmat )
+        write(*,*) "SCF F14"
       call cublas_release( dev_Ymat )
+        write(*,*) "SCF F15"
       call cublas_release( )
-
+        write(*,*) "SCF F16"
       call g2g_timer_stop('SCF')
       call g2g_timer_sum_stop('Finalize SCF')
       call g2g_timer_sum_stop('SCF')

@@ -238,6 +238,7 @@ extern "C" void g2g_deinit_(void) {
 void compute_new_grid(const unsigned int grid_type) {
   switch (grid_type) {
     case 0:
+//	cout << "case 0" << endl;
       fortran_vars.grid_type = SMALL_GRID;
       fortran_vars.grid_size = SMALL_GRID_SIZE;
       fortran_vars.e = fortran_vars.e1;
@@ -245,6 +246,7 @@ void compute_new_grid(const unsigned int grid_type) {
       fortran_vars.shells = fortran_vars.shells1;
       break;
     case 1:
+//	cout << "case 1" << endl;
       fortran_vars.grid_type = MEDIUM_GRID;
       fortran_vars.grid_size = MEDIUM_GRID_SIZE;
       fortran_vars.e = fortran_vars.e2;
@@ -252,6 +254,7 @@ void compute_new_grid(const unsigned int grid_type) {
       fortran_vars.shells = fortran_vars.shells2;
       break;
     case 2:
+//	cout << "case 2" << endl;
       fortran_vars.grid_type = BIG_GRID;
       fortran_vars.grid_size = BIG_GRID_SIZE;
       fortran_vars.e = fortran_vars.e3;
@@ -263,10 +266,15 @@ void compute_new_grid(const unsigned int grid_type) {
       break;
   }
 
+//	cout << "end cases" << endl;
   Timer t_grilla;
+//	cout << "F1 " << endl;
   t_grilla.start_and_sync();
+//	cout << "F2 " << endl;
   partition.regenerate();
+//	cout << "F3 " << endl;
   t_grilla.stop_and_sync();
+//	cout << "F4 " << endl;
 
 #if CPU_KERNELS && !CPU_RECOMPUTE
   /** compute functions **/
@@ -277,15 +285,20 @@ void compute_new_grid(const unsigned int grid_type) {
   partition.compute_functions(fortran_vars.do_forces, fortran_vars.gga);
 
 #endif
+// cout << "F5 " << endl;
 }
 //==============================================================================================================
 extern "C" void g2g_reload_atom_positions_(const unsigned int& grid_type) {
   //	cout  << "<======= GPU Reload Atom Positions (" << grid_type <<
   //")========>" << endl;
 
+//  cout  << "flag 1 g2g_reload_atom_positions " << endl;
+  
   HostMatrixFloat3 atom_positions(fortran_vars.atoms);  // gpu version (float3)
+//  cout  << "flag 2 g2g_reload_atom_positions " << endl;
   fortran_vars.atom_positions.resize(
       fortran_vars.atoms);  // cpu version (double3)
+//    cout  << "flag 3 g2g_reload_atom_positions " << endl;
   for (uint i = 0; i < fortran_vars.atoms; i++) {
     double3 pos = make_double3(fortran_vars.atom_positions_pointer(i, 0),
                                fortran_vars.atom_positions_pointer(i, 1),
@@ -293,7 +306,7 @@ extern "C" void g2g_reload_atom_positions_(const unsigned int& grid_type) {
     fortran_vars.atom_positions(i) = pos;
     atom_positions(i) = make_float3(pos.x, pos.y, pos.z);
   }
-
+//  cout  << "flag 4 g2g_reload_atom_positions " << endl;
 #if GPU_KERNELS
 #if FULL_DOUBLE
   G2G::gpu_set_atom_positions(fortran_vars.atom_positions);
@@ -302,7 +315,9 @@ extern "C" void g2g_reload_atom_positions_(const unsigned int& grid_type) {
 #endif
 #endif
 
+//  cout  << "flag 5 g2g_reload_atom_positions " << endl;
   compute_new_grid(grid_type);
+//  cout  << "flag 6 g2g_reload_atom_positions " << endl;
 }
 //==============================================================================================================
 extern "C" void g2g_new_grid_(const unsigned int& grid_type) {

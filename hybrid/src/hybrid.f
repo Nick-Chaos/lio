@@ -97,7 +97,7 @@
       integer :: mmsteps !number of MM steps for each QM step, not tested
       integer :: nroaa !number of residues
       integer :: nbond, nangle, ndihe, nimp !number of bonds, angles, dihedrals and impropers defined in amber.parm
-      integer :: atxres(20000) !number ot atoms in residue i, no deberia estar fija la dimension
+      integer, dimension(:), allocatable :: atxres !number ot atoms in residue i, no deberia estar fija la dimension
       double precision :: Etot_amber !total MM energy
       double precision :: Elj !LJ interaction (only QMMM)
       double precision :: Etots !QM+QMMM+MM energy
@@ -108,14 +108,15 @@
       logical :: constropt !activate restrain optimizaion
       integer :: nconstr !number of constrains
       integer :: nstepconstr !numero de pasos en los que barrera la coordenada de reaccion (limitado a 1-100 hay q cambiar esto, Nick)
-      integer :: typeconstr(20) !type of cosntrain (1 to 8)
-      double precision :: kforce(20) !force constant of constrain i
+      integer, dimension(:), allocatable :: typeconstr !type of cosntrain (1 to 8)
+      double precision, dimension(:), allocatable :: kforce !force constant of constrain i
       double precision :: rini,rfin  !initial and end value of reaction coordinate
-      double precision :: ro(20) ! fixed value of constrain in case nconstr > 1 for contrains 2+
-      double precision :: rt(20) ! value of reaction coordinate in constrain i
+      double precision, dimension(:), allocatable :: ro ! fixed value of constrain in case nconstr > 1 for contrains 2+
+      double precision, dimension(:), allocatable :: rt ! value of reaction coordinate in constrain i
       double precision :: dr !change of reaction coordinate in each optimization dr=(rfin-rini)/nstepconstr
-      double precision :: coef(20,10) !coeficients for typeconstr=8
-      integer :: atmsconstr(20,20), ndists(20) !atomos incluidos en la coordenada de reaccion
+      double precision, dimension(:,:), allocatable :: coef !coeficients for typeconstr=8
+      integer, dimension(:,:), allocatable :: atmsconstr
+      integer, dimension(:), allocatable :: ndists !atomos incluidos en la coordenada de reaccion
       integer :: istepconstr !auxiliar
 
 ! Cut Off QM-MM variables
@@ -187,6 +188,11 @@
      . centermol, centerdyn, link1, link2, link3, ljef,
      . mmForce, readcrd,  prversion, ioxvconstr,  
      . wripdb, wriene, wrirtc, subconstr1, subconstr2, subconstr3
+
+      allocate(atxres(20000))
+      allocate(typeconstr(20), kforce(20), ro(20), rt(20), coef(20,10))
+      allocate(atmsconstr(20,20), ndists(20))
+
 
 
 !--------------------------------------------------------------------
@@ -427,6 +433,10 @@ C Calculate Rcut & block list QM-MM
 !########################################################################################
 !#####################################  MAIN LOOPS  #####################################
 !########################################################################################
+
+!test
+           call wrirtc(slabel,Etots,rt(1),istepconstr,na_u,nac,natot,
+     .             rclas,atname,aaname,aanum,nesp,atsym,isa)
 
 
 ! Start loop over constrained optimization steps
@@ -930,6 +940,7 @@ c     .        cfdummy(1:3,itest)*kcal/(eV *Ang)  ! Ang, kcal/ang mol
       enddo                              !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CG optimization cicle
  10   continue
 
+        write(*,*) "flag 1"
 
 !Write optimiced structure(s) and energy(es)
 	if (idyn.eq.1) then
@@ -958,23 +969,35 @@ c     .        cfdummy(1:3,itest)*kcal/(eV *Ang)  ! Ang, kcal/ang mol
 	end if
 
 
+        write(*,*) "flag 2"
 
 
 ! properties calculation in lio for optimized geometry
       if (idyn .ne. 1 .and. qm) then
       do_properties=.true.
+      do_QM_forces=.false.
       call SCF_hyb(na_u, at_MM_cut_QMMM, r_cut_QMMM, Etot,
      .     F_cut_QMMM,
      .     Iz_cut_QMMM, do_SCF, do_QM_forces, do_properties)
       do_properties=.false.
+      do_QM_forces=.true.
       end if
       enddo !istepconstr                 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< RESTRAIN Loop
 
 
+         write(*,*) "flag 3"
+
 
       close(34)
 
+
+
+      call flush(6)
+
       if(qm) call lio_finalize()
+
+         write(*,*) "flag 4"
+
 
 ! Dump last coordinates to output
       if (writeipl) then
@@ -992,10 +1015,24 @@ c     .        cfdummy(1:3,itest)*kcal/(eV *Ang)  ! Ang, kcal/ang mol
      . (rclas(ia,na_u+i)/Ang,ia=1,3), i=1,nac)
         endif !mm
       endif !writeipl
+
+       write(*,*) "flag 5"
+
+
+      deallocate(atxres)
+      deallocate(typeconstr, kforce, ro, rt, coef)
+      deallocate(atmsconstr, ndists)
+
+
       call flush(6)
+
+       write(*,*) "flag 6"
 
 ! Print final date and time
       call timestamp('End of run')
+
+        write(*,*) "flag 7"
+
 
  345  format(2x, I2,    2x, 3(f10.6,2x))
  346  format(2x, f10.6, 2x, 3(f10.6,2x))

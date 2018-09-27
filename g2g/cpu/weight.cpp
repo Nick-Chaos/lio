@@ -11,7 +11,9 @@ using namespace std;
 namespace G2G {
 template <class scalar_type>
 void PointGroupCPU<scalar_type>::compute_weights(void) {
-#pragma omp parallel for
+//  cout << " compute weights CPU 1" << endl;
+//  fflush( stdout );
+//#pragma omp parallel for
   for (int point = 0; point < this->points.size(); point++) {
     uint atom = this->points[point].atom;
     double atom_weight;
