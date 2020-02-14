@@ -36,6 +36,9 @@ subroutine lio_defaults()
                            local_nonlocal, ecp_debug, ecp_full_range_int,      &
                            verbose_ECP, FOCK_ECP_read, FOCK_ECP_write,         &
                            Fulltimer_ECP, cut2_0, cut3_0, first_steep
+
+    use rhoint
+
     implicit none
 
 !   Names of files used for input and output.
@@ -77,6 +80,11 @@ subroutine lio_defaults()
     fukui          = .false.       ; lowdin             = .false.       ;
     mulliken       = .false.       ; dipole             = .false.       ;
     print_coeffs   = .false.       ; calc_propM         = .false.       ;
+    write_int_rho  = '  '          ; w_rho_xmin         = -5.d0         ;
+    w_rho_ymin     = -5.d0         ; w_rho_zmin         = -5.d0         ;
+    w_rho_xmax     = 5.d0          ; w_rho_ymax         =  5.d0         ;
+    w_rho_zmax     = 5.d0          ; w_rho_dx           =  0.1d0        ;
+    w_rho_dy       = 0.1d0         ; w_rho_dz           =  0.1d0        ;
 
 !   Old GPU_options
     max_function_exponent = 10     ; little_cube_size     = 8.0         ;

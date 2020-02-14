@@ -35,6 +35,7 @@ subroutine liomain(E, dipxyz)
    use typedef_operator, only: operator
    use dos_subs        , only: init_PDOS, build_PDOS, write_DOS
    use excited_data    , only: excited_forces, pack_dens_exc
+   use liosubs         , only: simple_quad
 
    implicit none
    real(kind=8)  , intent(inout) :: E, dipxyz(3)
@@ -134,6 +135,8 @@ subroutine liomain(E, dipxyz)
          endif
       endif
    endif
+
+   call simple_quad()
 
    call g2g_timer_sum_pause("Total")
 end subroutine liomain
