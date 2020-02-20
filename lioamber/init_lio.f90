@@ -37,7 +37,11 @@ subroutine lio_defaults()
                            verbose_ECP, FOCK_ECP_read, FOCK_ECP_write,         &
                            Fulltimer_ECP, cut2_0, cut3_0, first_steep
 
-    use rhoint
+    use rhoint   , only : write_int_rho, w_rho_xmin, w_rho_ymin, w_rho_zmin,   &
+                          w_rho_xmax, w_rho_ymax, w_rho_zmax, w_rho_dx,        &
+                          w_rho_dy, w_rho_dz, w_rho_rmin, w_rho_rmax, w_rho_dr,&
+                          w_rho_dtheta, w_rho_dphi, write1Drho
+
 
     implicit none
 
