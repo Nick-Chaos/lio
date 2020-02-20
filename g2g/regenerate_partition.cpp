@@ -411,9 +411,6 @@ void Partition::regenerate(void) {
       }
       _DBG(cout << "esfera incluye " << included_shells << " capas de "
                 << atom_shells << " (radio: " << radius << ")" << endl);
-//Nick test
-      cout << " radio_Nick: " << radius <<  endl;
-//
       sphere_radius_array[atom] = radius;
     }
   }
@@ -448,13 +445,7 @@ void Partition::regenerate(void) {
 
     double t0 = M_PI / (atom_shells + 1);
     double rm = fortran_vars.rm(atom);
-//Nick test
-      cout << " rm_Nick: " <<  rm <<  endl;
-//
 
-//Nick test
-      cout << " radio2_Nick: " <<  "shell " << "atom_shells " << "t1 " << "x " <<  "r1" << endl;
-//
 
     puntos_totales += (uint)fortran_vars.grid_size * atom_shells;
     for (uint shell = 0; shell < atom_shells; shell++) {
@@ -464,9 +455,6 @@ void Partition::regenerate(void) {
       double r1 = rm * (1.0 + x) / (1.0 - x);
       double wrad = w * (r1 * r1) * rm * 2.0 / ((1.0 - x) * (1.0 - x));
 
-//Nick test
-      cout << " radio2_Nick: " <<  shell << " " << atom_shells << " " <<t1 << " " <<x << " " << r1 << endl;
-//
       for (uint point = 0; point < (uint)fortran_vars.grid_size; point++) {
         double3 rel_point_position =
             make_double3(fortran_vars.e(point, 0), fortran_vars.e(point, 1),
