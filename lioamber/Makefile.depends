@@ -139,7 +139,6 @@ tmplist :=
 tmplist += dos_subs.o lionml_data.o
 $(tmplist:%.o=$(OBJPATH)/%.o) : $(OBJPATH)/dos_data.mod
 
-
 ################################################################################
 include converger_subs/conver.mk
 OBJECTS += converger_data.o
