@@ -60,7 +60,13 @@ module lionml_data
                                  Rho_LS, nMax, DIIS_start, BDIIS_start
    use dos_data          , only: dos_calc, pdos_calc, pdos_allb
    use dftd3_data        , only: dftd3
-   use rhoint
+   use rhoint            , only: write_int_rho, w_rho_xmin, w_rho_ymin,        &
+                                 w_rho_zmin, w_rho_xmax, w_rho_ymax,           &
+                                 w_rho_zmax, w_rho_dx,  w_rho_dy, w_rho_dz,    &
+                                 w_rho_rmin, w_rho_rmax, w_rho_dr,             &
+                                 w_rho_dtheta, w_rho_dphi, write1Drho
+
+   
    implicit none
 
 !  Namelist definition
