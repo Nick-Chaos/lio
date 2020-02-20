@@ -446,7 +446,6 @@ void Partition::regenerate(void) {
     double t0 = M_PI / (atom_shells + 1);
     double rm = fortran_vars.rm(atom);
 
-
     puntos_totales += (uint)fortran_vars.grid_size * atom_shells;
     for (uint shell = 0; shell < atom_shells; shell++) {
       double t1 = t0 * (shell + 1);
