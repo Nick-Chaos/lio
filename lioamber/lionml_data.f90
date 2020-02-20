@@ -106,7 +106,8 @@ module lionml_data
                   ! Variables for 1D density printing.
                   write_int_rho, w_rho_xmin, w_rho_ymin, w_rho_zmin,           &
                   w_rho_xmax, w_rho_ymax, w_rho_zmax, w_rho_dx,  w_rho_dy,     &
-                  w_rho_dz,                                                    &
+                  w_rho_dz, w_rho_rmin, w_rho_rmax, w_rho_dr, w_rho_dtheta,    &
+                  w_rho_dphi, write1Drho,                                      &
                   ! Variables for GPU options.
                   little_cube_size, max_function_exponent, free_global_memory, &
                   min_points_per_cube, assign_all_functions, sphere_radius,    &

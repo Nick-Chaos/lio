@@ -61,8 +61,6 @@ contains
 #  include "set_masses.f90"
 #  include "nuclear_verlet.f90"
 
-#  include "simple_quadrature.f90"
-
 !  Possible IO-specific module? Think if the following procedures shouldn't
 !  go together but somewhere else.
 #  include "catch_iostat.f90"

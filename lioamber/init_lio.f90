@@ -85,6 +85,9 @@ subroutine lio_defaults()
     w_rho_xmax     = 5.d0          ; w_rho_ymax         =  5.d0         ;
     w_rho_zmax     = 5.d0          ; w_rho_dx           =  0.1d0        ;
     w_rho_dy       = 0.1d0         ; w_rho_dz           =  0.1d0        ;
+    w_rho_rmin     = 0.d0          ; w_rho_rmax         =  5.d0         ;
+    w_rho_dr       = 0.1d0         ; w_rho_dtheta       =  0.1d0        ;
+    w_rho_dphi     = 0.1d0         ; write1Drho         = .false.       ;
 
 !   Old GPU_options
     max_function_exponent = 10     ; little_cube_size     = 8.0         ;

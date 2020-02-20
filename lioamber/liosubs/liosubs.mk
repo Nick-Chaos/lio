@@ -22,8 +22,6 @@ internal_files += safeio_rewind.f90
 internal_files += write_energy.f90
 internal_files += write_geom.f90
 
-internal_files += simple_quadrature.f90
-
 $(OBJPATH)/liosubs.o : $(internal_files)
 
 ###############################################################################
