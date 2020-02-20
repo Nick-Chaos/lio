@@ -47,7 +47,6 @@ OBJECTS += properties.o
 OBJECTS += errlog.o
 OBJECTS += field_subs.o
 OBJECTS += propagators.o
-OBJECTS += rho_int.o
 OBJECTS += constants.o
 
 ################################################################################
