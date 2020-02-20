@@ -436,7 +436,6 @@ tmplist += geometry_optim.o transport.o
 
 tmplist += lionml_subs.o
 tmplist += tbdft_subs.o
-tmplist += liosubs.o
 $(tmplist:%.o=$(OBJPATH)/%.o) : $(OBJPATH)/garcha_mod.mod
 
 
