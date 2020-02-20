@@ -139,6 +139,7 @@ $(tmplist:%.o=$(OBJPATH)/%.o) : $(OBJPATH)/dos_subs.mod
 tmplist :=
 tmplist += dos_subs.o lionml_data.o
 $(tmplist:%.o=$(OBJPATH)/%.o) : $(OBJPATH)/dos_data.mod
+
 ################################################################################
 tmplist :=
 tmplist += init_lio.o
