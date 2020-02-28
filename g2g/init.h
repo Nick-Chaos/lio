@@ -37,7 +37,7 @@ struct FortranVars {
   bool gga, lda;
   GridType grid_type;
   GridSize grid_size;
-  double& grid_scale;
+  double grid_scale;
   FortranMatrix<double> atom_positions_pointer;
   HostMatrix<double3> atom_positions;
   HostMatrix<uint> atom_types;

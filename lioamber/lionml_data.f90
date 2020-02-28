@@ -18,7 +18,7 @@ module lionml_data
                                  minimzation_steep, n_min_steeps, n_points,    &
                                  lineal_search, timers, IGRID, IGRID2,         &
                                  use_libxc, ex_functional_id, ec_functional_id,&
-                                 gpu_level, becke, PBE0
+                                 gpu_level, becke, PBE0, scale_radial_grid
    use tbdft_data         , only: tbdft_calc, MTB, alfaTB, betaTB, gammaTB,    &
                                   start_tdtb, end_tdtb,n_biasTB,               &
                                   driving_rateTB, TB_q_tot, TB_charge_ref,     &
@@ -82,7 +82,8 @@ module lionml_data
                      use_libxc, ex_functional_id, ec_functional_id
 
    namelist /lio/ OPEN, NMAX, Nunp, VCINP, rmax, rmaxs, predcoef, writexyz,    &
-                  Iexch, igrid, igrid2, initial_guess, natom, nsol, charge,    &
+                  Iexch, igrid, igrid2, scale_radial_grid, initial_guess,      &
+                  natom, nsol, charge,    &
                   ! Convergence acceleration.
                   GOLD, told, Etold, good_cut, DIIS, ndiis, hybrid_converg,    &
                   diis_bias, conver_method, level_shift, lvl_shift_cut,        &
