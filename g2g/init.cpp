@@ -79,7 +79,8 @@ extern "C" void g2g_parameter_init_(
     const unsigned int& nopt, const unsigned int& Iexch, double* e, double* e2,
     double* e3, double* wang, double* wang2, double* wang3,
     bool& use_libxc, const unsigned int& ex_functional_id, 
-    const unsigned int& ec_functional_id, bool& becke, double& fact_exchange){
+    const unsigned int& ec_functional_id, bool& becke, double& fact_exchange,
+    double& scale_radial_grid){
   fortran_vars.atoms = natom;
   fortran_vars.max_atoms = max_atoms;
   fortran_vars.gaussians = ngaussians;
@@ -204,6 +205,8 @@ extern "C" void g2g_parameter_init_(
   fortran_vars.wang3 =
       FortranMatrix<double>(wang3, BIG_GRID_SIZE, 1, BIG_GRID_SIZE);
 
+  fortran_vars.grid_scale = scale_radial_grid;
+
   fortran_vars.atom_atom_dists =
       HostMatrix<double>(fortran_vars.atoms, fortran_vars.atoms);
   fortran_vars.nearest_neighbor_dists = HostMatrix<double>(fortran_vars.atoms);
@@ -280,19 +283,8 @@ void compute_new_grid(const unsigned int grid_type) {
       fortran_vars.wang = fortran_vars.wang3;
       fortran_vars.shells.resize(fortran_vars.atoms);
       for (int i = 0; i < fortran_vars.atoms; i++) {
-        fortran_vars.shells(i) = fortran_vars.shells2(i) * 2;
-        fortran_vars.rm(i)     = fortran_vars.rm_base(i) * 0.5;
-      }
-      break;
-    case 4:
-      fortran_vars.grid_type = BIG_GRID;
-      fortran_vars.grid_size = BIG_GRID_SIZE;
-      fortran_vars.e = fortran_vars.e3;
-      fortran_vars.wang = fortran_vars.wang3;
-      fortran_vars.shells.resize(fortran_vars.atoms);
-      for (int i = 0; i < fortran_vars.atoms; i++) {
-        fortran_vars.shells(i) = fortran_vars.shells2(i) * 4;
-        fortran_vars.rm(i)     = fortran_vars.rm_base(i) * 0.25;
+        fortran_vars.shells(i) = uint(fortran_vars.shells2(i) * fortran_vars.grid_scale);
+        fortran_vars.rm(i)     = fortran_vars.rm_base(i) / fortran_vars.grid_scale;
       }
       break;
     default:

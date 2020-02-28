@@ -30,7 +30,7 @@ subroutine lio_defaults()
                            steep, Force_cut, Energy_cut, minimzation_steep,    &
                            n_min_steeps, lineal_search, n_points, timers,      &
                            calc_propM, writexyz, IGRID2, propagator, NBCH,     &
-                           predcoef
+                           predcoef, scale_radial_grid
 
     use ECP_mod   , only : ecpmode, ecptypes, tipeECP, ZlistECP, cutECP,       &
                            local_nonlocal, ecp_debug, ecp_full_range_int,      &
@@ -107,7 +107,7 @@ subroutine lio_defaults()
     cube_orb_file  = "orb.cube"    ; cube_dens_file     = 'dens.cube'   ;
     IGRID          = 2             ; cube_elec          = .false.       ;
     IGRID2         = 2             ; cube_elec_file     = 'field.cube'  ;
-    timers         = 0             ;
+    scale_radial_grid = 1.0        ; timers             = 0             ;
     NUNP           = 0             ; energy_freq        = 1             ;
     cube_sqrt_orb  = .false.       ; MEMO               = .true.        ;
     sol            = .false.       ;
