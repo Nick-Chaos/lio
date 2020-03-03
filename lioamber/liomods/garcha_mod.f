@@ -6,6 +6,8 @@
      >  ,Iexch,nsol,npas,npasw,watermod,noconverge,
      > converge,nang,propagator,NBCH
       real*8 scale_radial_grid !dejo esta variable aca para que acompañe a las IGRID
+      integer integrate_density! mover luego
+
       integer ex_functional_id, ec_functional_id
       logical use_libxc
       integer restart_freq, energy_freq

@@ -23,7 +23,7 @@ subroutine liomain(E, dipxyz)
                                calc_propM, doing_ehrenfest, first_step, Eorbs,&
                                Eorbs_b, fukui, print_coeffs, steep, NUNP,     &
                                MO_coef_at, MO_coef_at_b, Pmat_vec, natom,     &
-                               cubegen_only
+                               cubegen_only, integrate_density
    use geometry_optim  , only: do_steep
    use mask_ecp        , only: ECP_init
    use tbdft_data      , only: MTB, tbdft_calc
@@ -35,6 +35,9 @@ subroutine liomain(E, dipxyz)
    use dos_subs        , only: init_PDOS, build_PDOS, write_DOS
    use excited_data    , only: excited_forces, pack_dens_exc
    use rhoint          , only: write1Drho
+#ifdef DEBUGGING
+   use debug_tools     , only: Grid_integration
+#endif
 
    implicit none
    real(kind=8)  , intent(inout) :: E, dipxyz(3)
@@ -123,6 +126,7 @@ subroutine liomain(E, dipxyz)
       if (fukui) call do_fukui()
       if (writeforces) call do_forces(123)
       if (write1Drho) call integrate_rho()
+!      if (totalrho) call g2g_integrate_rho_grid()
 
       if (print_coeffs) then
          if (open) then
@@ -134,7 +138,10 @@ subroutine liomain(E, dipxyz)
       endif
    endif
 
-   call g2g_timer_sum_pause("Total")
+#ifdef DEBUGGING
+   call Grid_integration()
+#endif
+
 end subroutine liomain
 
 !%% DO_FORCES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!

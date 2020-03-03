@@ -80,7 +80,7 @@ extern "C" void g2g_parameter_init_(
     double* e3, double* wang, double* wang2, double* wang3,
     bool& use_libxc, const unsigned int& ex_functional_id, 
     const unsigned int& ec_functional_id, bool& becke, double& fact_exchange,
-    double& scale_radial_grid){
+    double& scale_radial_grid, int* integrate_density){
   fortran_vars.atoms = natom;
   fortran_vars.max_atoms = max_atoms;
   fortran_vars.gaussians = ngaussians;
@@ -206,6 +206,7 @@ extern "C" void g2g_parameter_init_(
       FortranMatrix<double>(wang3, BIG_GRID_SIZE, 1, BIG_GRID_SIZE);
 
   fortran_vars.grid_scale = scale_radial_grid;
+  fortran_vars.int_dens = integrate_density;
 
   fortran_vars.atom_atom_dists =
       HostMatrix<double>(fortran_vars.atoms, fortran_vars.atoms);

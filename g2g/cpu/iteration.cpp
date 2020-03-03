@@ -42,6 +42,7 @@ void PointGroupCPU<scalar_type>::solve_closed(
     bool compute_energy, double& energy, HostMatrix<double>& fort_forces,
     int inner_threads, HostMatrix<double>& rmm_global_output,
     HostMatrix<double>& becke_dens) {
+
   const uint group_m = this->total_functions();
   const int npoints = this->points.size();
 
@@ -86,6 +87,7 @@ void PointGroupCPU<scalar_type>::solve_closed(
   }
 
   const int iexch = fortran_vars.iexch;
+
 
   /** density **/
   if (lda) {
@@ -161,8 +163,8 @@ void PointGroupCPU<scalar_type>::solve_closed(
         const scalar_type hpx = hpxv[i], hpy = hpyv[i], hpz = hpzv[i];
         const scalar_type hix = hixv[i], hiy = hiyv[i], hiz = hizv[i];
 
-        pd += Fi * w;
-
+        pd += Fi * w; // partial density
+        
         tdx += gx * w + w3xc * Fi;
         tdd1x += gx * w3xc * 2 + hpx * w + ww1xc * Fi;
         tdd2x += gx * w3yc + gy * w3xc + hix * w + ww2xc * Fi;
@@ -197,6 +199,13 @@ void PointGroupCPU<scalar_type>::solve_closed(
 
       const scalar_type wp = this->points[point].weight;
 
+#ifdef _DEBUG // integrate only the density removing exc value
+	if ((*fortran_vars.int_dens) ==1) {
+		exc = 0.5;
+		corr = 0.5;
+	}
+#endif
+
       if (compute_energy) {
         localenergy += (pd * wp) * (exc + corr);
 
@@ -225,6 +234,7 @@ void PointGroupCPU<scalar_type>::solve_closed(
     }
   }
   timers.density.pause();
+
 
   timers.forces.start();
   if (compute_forces) {
@@ -315,7 +325,7 @@ void PointGroupCPU<scalar_type>::solve_closed(
   timers.rmm.pause();
 
   energy += localenergy;
-
+  
 #if CPU_RECOMPUTE or !GPU_KERNELS
   /* clear functions */
   gX.deallocate();
@@ -477,7 +487,6 @@ void PointGroupCPU<scalar_type>::solve_opened(
         tdd2z_a += gy * w3z_a + gz * w3y_a + hiz * w_a + ww2z_a * Fi;
 
         pd_b += Fi * w_b;
-
         tdx_b += gx * w_b + w3x_b * Fi;
         tdd1x_b += gx * w3x_b * 2 + hpx * w_b + ww1x_b * Fi;
         tdd2x_b += gx * w3y_b + gy * w3x_b + hix * w_b + ww2x_b * Fi;
@@ -505,6 +514,13 @@ void PointGroupCPU<scalar_type>::solve_opened(
                                  corr2, y2a, y2b, 9, fortran_vars.fexc);
 
       const scalar_type wp = this->points[point].weight;
+
+#ifdef _DEBUG // integrate only the density removing exc value
+	if ((*fortran_vars.int_dens) ==1) {
+		exc = 0.5; // arbitrary values, sum has to be 1
+		corr = 0.5;
+	}
+#endif
 
       if (compute_energy) {
         localenergy += ((pd_a + pd_b) * wp) * (exc + corr);

@@ -54,6 +54,9 @@ struct FortranVars {
   uint nvirt;
   uint ncolr;
 
+  //Debug, integrate all density 
+  int* int_dens;
+
   // If using Becke partitioning.
   bool becke;
   HostMatrix<double> becke_atom_dens;
