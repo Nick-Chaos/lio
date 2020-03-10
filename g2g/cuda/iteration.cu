@@ -252,6 +252,7 @@ void PointGroupGPU<scalar_type>::solve_closed(
     becke_w_gpu = becke_w_cpu;
   }
 
+
   if (compute_energy) {
     CudaMatrix<scalar_type> energy_gpu(this->number_of_points);
 
@@ -262,7 +263,8 @@ void PointGroupGPU<scalar_type>::solve_closed(
 
 #define accumulate_parameters \
     energy_gpu.data, factors_gpu.data, point_weights_gpu.data, this->number_of_points, block_height, \
-    partial_densities_gpu.data, dxyz_gpu.data, dd1_gpu.data, dd2_gpu.data, fortran_vars.fexc
+    partial_densities_gpu.data, dxyz_gpu.data, dd1_gpu.data, dd2_gpu.data, fortran_vars.fexc, *fortran_vars.int_dens
+
 
     // VER QUE PASA SI SACAMOS COMPUTE_FACTOR Y COMPUTE ENERGY DE gpu_compute_density
     if (compute_forces || compute_rmm) {
@@ -366,8 +368,10 @@ void PointGroupGPU<scalar_type>::solve_closed(
 
 #define compute_parameters \
     NULL,factors_gpu.data,point_weights_gpu.data,this->number_of_points,function_values_transposed.data,gradient_values_transposed.data,hessian_values_transposed.data,group_m,partial_densities_gpu.data,dxyz_gpu.data,dd1_gpu.data,dd2_gpu.data
+
 #define accumulate_parameters \
-    NULL,factors_gpu.data,point_weights_gpu.data,this->number_of_points,block_height,partial_densities_gpu.data,dxyz_gpu.data,dd1_gpu.data,dd2_gpu.data, fortran_vars.fexc
+    NULL,factors_gpu.data,point_weights_gpu.data,this->number_of_points,block_height,partial_densities_gpu.data,dxyz_gpu.data,dd1_gpu.data,dd2_gpu.data, fortran_vars.fexc, *fortran_vars.int_dens
+
     if (lda)
     {
         gpu_compute_density<scalar_type, false, true, true><<<threadGrid, threadBlock>>>(compute_parameters);
@@ -692,7 +696,7 @@ void PointGroupGPU<scalar_type>::solve_opened(
              energy_gpu.data,energy_i_gpu.data,energy_c_gpu.data,energy_c1_gpu.data,energy_c2_gpu.data,
              factors_a_gpu.data, factors_b_gpu.data, point_weights_gpu.data,this->number_of_points,block_height,
              partial_densities_a_gpu.data, dxyz_a_gpu.data, dd1_a_gpu.data, dd2_a_gpu.data,
-             partial_densities_b_gpu.data, dxyz_b_gpu.data, dd1_b_gpu.data, dd2_b_gpu.data, fortran_vars.fexc);
+             partial_densities_b_gpu.data, dxyz_b_gpu.data, dd1_b_gpu.data, dd2_b_gpu.data, fortran_vars.fexc, *fortran_vars.int_dens);
       if (cdft_vars.do_chrg || cdft_vars.do_spin ) {        
         cdft_factors_gpu.resize(cdft_vars.regions * this->number_of_points);
         cdft_factors_gpu.zero();
@@ -716,7 +720,7 @@ void PointGroupGPU<scalar_type>::solve_opened(
              energy_gpu.data, energy_i_gpu.data,energy_c_gpu.data,energy_c1_gpu.data,energy_c2_gpu.data,
              factors_a_gpu.data, factors_b_gpu.data, point_weights_gpu.data,this->number_of_points,block_height,
              partial_densities_a_gpu.data, dxyz_a_gpu.data, dd1_a_gpu.data, dd2_a_gpu.data,
-             partial_densities_b_gpu.data, dxyz_b_gpu.data, dd1_b_gpu.data, dd2_b_gpu.data, fortran_vars.fexc);
+             partial_densities_b_gpu.data, dxyz_b_gpu.data, dd1_b_gpu.data, dd2_b_gpu.data, fortran_vars.fexc, *fortran_vars.int_dens);
     }
     cudaAssertNoError("compute_density");
 
@@ -764,7 +768,7 @@ void PointGroupGPU<scalar_type>::solve_opened(
            NULL,NULL,NULL,NULL,NULL,
            factors_a_gpu.data, factors_b_gpu.data, point_weights_gpu.data,this->number_of_points,block_height,
            partial_densities_a_gpu.data, dxyz_a_gpu.data, dd1_a_gpu.data, dd2_a_gpu.data,
-           partial_densities_b_gpu.data, dxyz_b_gpu.data, dd1_b_gpu.data, dd2_b_gpu.data, fortran_vars.fexc);
+           partial_densities_b_gpu.data, dxyz_b_gpu.data, dd1_b_gpu.data, dd2_b_gpu.data, fortran_vars.fexc, *fortran_vars.int_dens);
 
     if (cdft_vars.do_chrg || cdft_vars.do_spin ) {           
       cdft_factors_gpu.resize(cdft_vars.regions * this->number_of_points);

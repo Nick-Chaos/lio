@@ -184,6 +184,14 @@ void PointGroupCPU<scalar_type>::solve_closed(
       const vec_type3 dd1(tdd1x, tdd1y, tdd1z);
       const vec_type3 dd2(tdd2x, tdd2y, tdd2z);
 
+#ifdef _DEBUG // integrate only the density removing exc value
+      if ((*fortran_vars.int_dens) ==1) {
+	exc = 0.5;// arbitrary values, sum has to be 1
+        corr = 0.5;
+      } else {
+#endif
+
+
 #if USE_LIBXC
     /** Libxc CPU - version **/
     if (fortran_vars.use_libxc) {
@@ -197,14 +205,19 @@ void PointGroupCPU<scalar_type>::solve_closed(
                                   fortran_vars.fexc);
 #endif
 
+
+#ifdef _DEBUG
+     }
+#endif
+
       const scalar_type wp = this->points[point].weight;
 
-#ifdef _DEBUG // integrate only the density removing exc value
-	if ((*fortran_vars.int_dens) ==1) {
-		exc = 0.5;
-		corr = 0.5;
-	}
-#endif
+//#ifdef _DEBUG // integrate only the density removing exc value
+//	if ((*fortran_vars.int_dens) ==1) {
+//		exc = 0.5;// arbitrary values, sum has to be 1
+//		corr = 0.5;
+//	}
+//#endif
 
       if (compute_energy) {
         localenergy += (pd * wp) * (exc + corr);

@@ -100,7 +100,7 @@ endif
 NVCCDBGFLAGS  :=
 NVCCAINTFLAGS :=
 ifeq ($(dbg),1)
-  NVCCDBGFLAGS  += -O1 --debug --device-debug
+  NVCCDBGFLAGS  += -O1 --debug --device-debug -D_DEBUG
   NVCCAINTFLAGS += -O3 --compiler-options -fno-strict-aliasing
 else
   NVCCFLAGS   += -O3 --compiler-options -fno-strict-aliasing

@@ -1,3 +1,6 @@
+#include <stdio.h> //Test Nick
+#include<iostream> //TestNicka
+#include <stdbool.h> //TestNick
 #define WIDTH 4
 
 // OPEN SHELL CASE
@@ -11,7 +14,7 @@ __global__ void gpu_accumulate_point_open(
     vec_type<scalar_type, WIDTH>* dxyz_a, vec_type<scalar_type, WIDTH>* dd1_a,
     vec_type<scalar_type, WIDTH>* dd2_a, scalar_type* partial_density_b,
     vec_type<scalar_type, WIDTH>* dxyz_b, vec_type<scalar_type, WIDTH>* dd1_b,
-    vec_type<scalar_type, WIDTH>* dd2_b, double fexc) {
+    vec_type<scalar_type, WIDTH>* dd2_b, double fexc, int do_dens) {
   uint point = blockIdx.x * DENSITY_ACCUM_BLOCK_SIZE + threadIdx.x;
 
   scalar_type point_weight = 0.0f;
@@ -39,9 +42,25 @@ __global__ void gpu_accumulate_point_open(
       _dd2_b += dd2_b[this_row];
     }
   }
+
+
+#ifdef _DEBUG 
+  if (do_dens == 0) {
+#endif
   calc_ggaOS<scalar_type, WIDTH>(
       _partial_density_a, _partial_density_b, _dxyz_a, _dxyz_b, _dd1_a, _dd1_b,
       _dd2_a, _dd2_b, exc_corr, exc, corr, corr1, corr2, v_a, v_b, 9, fexc);
+
+#ifdef _DEBUG
+  } else { // integrate only the density removing exc value
+    exc_corr = 1.0;
+    exc = 1.0;
+    corr = 1.0;
+    corr1 = 1.0;
+    corr2 = 1.0;
+  }
+#endif
+
 
   if (compute_energy && valid_thread) {
     energy[point] =
@@ -68,7 +87,7 @@ __global__ void gpu_accumulate_point(
     const scalar_type* const point_weights, uint points, int block_height,
     scalar_type* partial_density, vec_type<scalar_type, WIDTH>* dxyz,
     vec_type<scalar_type, WIDTH>* dd1, vec_type<scalar_type, WIDTH>* dd2,
-    double fexc) {
+    double fexc, int do_dens) {
   uint point = blockIdx.x * DENSITY_ACCUM_BLOCK_SIZE + threadIdx.x;
 
   scalar_type point_weight = 0.0f;
@@ -93,8 +112,17 @@ __global__ void gpu_accumulate_point(
     }
   }
 
-  calc_ggaCS_in<scalar_type, 4>(_partial_density, _dxyz, _dd1, _dd2, exc_x,
+#ifdef _DEBUG 
+  if (do_dens == 0) {
+#endif
+    calc_ggaCS_in<scalar_type, 4>(_partial_density, _dxyz, _dd1, _dd2, exc_x,
                                 exc_c, y2a, 9, fexc);
+#ifdef _DEBUG
+  } else { // integrate only the density removing exc value
+    exc_x = 0.5;
+    exc_c = 0.5;
+  }
+#endif
 
   if (compute_energy && valid_thread) {
     exc_corr = exc_x + exc_c;
