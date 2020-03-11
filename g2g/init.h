@@ -43,7 +43,7 @@ struct FortranVars {
   HostMatrix<uint> atom_types;
   HostMatrix<uint> atom_Z;
   HostMatrix<uint> shells, shells1, shells2;
-  HostMatrix<double> rm, rm_base;
+  HostMatrix<double> rm, rm_base, rcore_base;
   HostMatrix<double> atom_atom_dists, nearest_neighbor_dists;
   FortranMatrix<uint> nucleii, contractions;
   FortranMatrix<double> a_values, c_values;

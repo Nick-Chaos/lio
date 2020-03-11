@@ -5,7 +5,7 @@
 ! for 50 and 116 angular points. Lebedev (Becke's method).                     !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
 subroutine gridlio
-   use garcha_mod, only : e_, e_2, e3, Rm2, Nr, Nr2, wang, wang2, wang3
+   use garcha_mod, only : e_, e_2, e3, Rm2, Rcore, Nr, Nr2, wang, wang2, wang3
    use constants_mod, only : bohr, pi
    implicit none
 
@@ -35,6 +35,9 @@ subroutine gridlio
       Rm2(icount) = Rm2t(icount) / (2.D0 * bohr)
       Nr(icount)  = Nrt(icount)
       Nr2(icount) = Nr2t(icount)
+      ! Removed radii for ECP need to complete this with calculated values
+      if (Rcore(icount) < 0.d0) Rcore(icount) = 0.25d0*Rm2(icount)
+
    enddo
 
    pi4  = 4.D0 * pi

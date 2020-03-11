@@ -80,7 +80,7 @@ extern "C" void g2g_parameter_init_(
     double* e3, double* wang, double* wang2, double* wang3,
     bool& use_libxc, const unsigned int& ex_functional_id, 
     const unsigned int& ec_functional_id, bool& becke, double& fact_exchange,
-    double& scale_radial_grid, int* integrate_density){
+    double& scale_radial_grid, int* integrate_density, double* Rcore){
   fortran_vars.atoms = natom;
   fortran_vars.max_atoms = max_atoms;
   fortran_vars.gaussians = ngaussians;
@@ -128,6 +128,7 @@ extern "C" void g2g_parameter_init_(
   fortran_vars.shells2.resize(fortran_vars.atoms);
   fortran_vars.rm.resize(fortran_vars.atoms);
   fortran_vars.rm_base.resize(fortran_vars.atoms);
+  fortran_vars.rcore_base.resize(fortran_vars.atoms);
 
   /* ignore the 0th element on these */
   for (uint i = 0; i < fortran_vars.atoms; i++) {
@@ -138,6 +139,7 @@ extern "C" void g2g_parameter_init_(
   }
   for (uint i = 0; i < fortran_vars.atoms; i++) {
     fortran_vars.rm_base(i) = Rm[Iz[i]];
+    fortran_vars.rcore_base(i) = Rcore[Iz[i]];
   }
 
   /* MO BASIS SET */
@@ -248,6 +250,7 @@ extern "C" void g2g_deinit_(void) {
 }
 //============================================================================================================
 void compute_new_grid(const unsigned int grid_type) {
+	std::cout << "nueva grilla, tipo: " << grid_type << std::endl;
   switch (grid_type) {
     fortran_vars.rm = fortran_vars.rm_base;
     case 0:
@@ -285,7 +288,7 @@ void compute_new_grid(const unsigned int grid_type) {
       fortran_vars.shells.resize(fortran_vars.atoms);
       for (int i = 0; i < fortran_vars.atoms; i++) {
         fortran_vars.shells(i) = uint(fortran_vars.shells2(i) * fortran_vars.grid_scale);
-        fortran_vars.rm(i)     = fortran_vars.rm_base(i) / fortran_vars.grid_scale;
+        fortran_vars.rm(i)     = fortran_vars.rm_base(i);
       }
       break;
     default:
@@ -333,17 +336,19 @@ extern "C" void g2g_reload_atom_positions_(const unsigned int& grid_type,
   G2G::gpu_set_atom_positions(atom_positions);
 #endif
 #endif
-
+	cout << "g2g_reload_atom_positions_ type: "<< grid_type << endl;
   compute_new_grid(grid_type);
 }
 //==============================================================================================================
 extern "C" void g2g_new_grid_(const unsigned int& grid_type) {
   //	cout << "<======= GPU New Grid (" << grid_type << ")========>" << endl;
-  if (grid_type == (uint)fortran_vars.grid_type)
+	cout << "g2g_new_grid_ type: " << grid_type << std::endl;
+  if (grid_type == (uint)fortran_vars.grid_type || (grid_type > 2)){
     ;
   //		cout << "not loading, same grid as loaded" << endl;
-  else
+  } else {
     compute_new_grid(grid_type);
+  }
 }
 
 template <bool compute_rmm, bool lda, bool compute_forces>

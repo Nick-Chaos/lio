@@ -193,7 +193,7 @@ END SUBROUTINE norm_C
 SUBROUTINE ReasignZ()
 !cambia la carga de los nucleos con pseudopotenciales sacandole la carga del core y guarda las cargas originales en IzECP
 !tambien corrige la cantidad de electrones restando los que van al core
-   USE garcha_mod, ONLY : Iz, natom, NCO
+   USE garcha_mod, ONLY : Iz, natom, NCO, Rcore
    USE ECP_mod, ONLY : ZlistECP,IzECP,Zcore,ecptypes,asignacion, ECPatoms_order
    IMPLICIT NONE
    CHARACTER  :: simb*3
@@ -218,9 +218,12 @@ SUBROUTINE ReasignZ()
             CALL asignacion(IzECP(i),simb)
             WRITE(*,3906) i,simb,Iz(i),Zcore(ZlistECP(j)) 
             elec_remov=elec_remov+Zcore(ZlistECP(j))
+            Rcore(Iz(i)) = -1.0 !mark for remove grid in core, agregar luego un if para prenderlo
          END IF
       END DO
    END DO
+
+
 
    WRITE(*,3907)
    WRITE(*,*)

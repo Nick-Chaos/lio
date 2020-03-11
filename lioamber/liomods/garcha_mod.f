@@ -30,7 +30,7 @@
       real*8, dimension (:), ALLOCATABLE ::  Em, Rm, pc
       integer, dimension (:), ALLOCATABLE :: Iz
 
-      real*8 :: Rm2(0:54)
+      real*8 :: Rm2(0:54), Rcore(0:54)=0.d0
 c Everything is dimensioned for 2 basis, normal and density
 c ncf, lt,at,ct parameters for atomic basis sets
 

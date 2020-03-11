@@ -12,7 +12,7 @@ subroutine drive(iostat)
    use garcha_mod, only: X, rhoalpha, rhobeta,  charge, e_, e_2, e3, Pmat_vec, &
                          fcoord, natom, frestart, Iexch, frestartin,&
                          NCO, npas, Nr, Nr2, wang, wang2, wang3, VCINP, OPEN,  &
-                         Iz, Rm2, rqm, Nunp, restart_freq, writexyz, gpu_level,&
+                         Iz, Rm2, Rcore, rqm, Nunp, restart_freq, writexyz, gpu_level,&
                          number_restr, restr_pairs, restr_index, restr_k,      &
                          restr_w, restr_r0, MO_coef_at, MO_coef_at_b,&
                          use_libxc, ex_functional_id, ec_functional_id,        &
@@ -42,7 +42,7 @@ subroutine drive(iostat)
 
    ! Calls generator of table for incomplete gamma functions
    call init_math()
-   call GRIDLIO()
+!   call GRIDLIO()
 
    ! Opens files for IO
    if (writexyz) open(unit = 18,file = fcoord)
@@ -53,6 +53,8 @@ subroutine drive(iostat)
       call allocate_ECP() !allocatea la matriz de Fock de p-potenciales y el vector con los terminos de 1 electron sin corregir
       call ReasignZ() !reasigna las cargas de los nucleos removiendo la carga del core
    end if
+
+   call GRIDLIO() !necesita informacion de ECP para recortar la grilla
 
    ! Gets the number of occupied orbitals in a closed shell system (or
    ! Spin Up in an open shell system).
@@ -183,7 +185,7 @@ subroutine drive(iostat)
                            Fmat_vec2, rhoalpha, rhobeta, NCO, OPEN, Nunp, 0,  &
                            Iexch, e_, e_2, e3, wang, wang2, wang3, use_libxc, &
                            ex_functional_id, ec_functional_id, becke,         &
-                           factor_exchange, scale_radial_grid, integrate_density)
+                           factor_exchange, scale_radial_grid, integrate_density, Rcore)
    call summon_ghosts(Iz, natom, verbose)
 
    if (gpu_level .ne. 0) call aint_parameter_init(Md, ncontd, nshelld, cd, ad, &
