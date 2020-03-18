@@ -30,7 +30,7 @@ subroutine lio_defaults()
                            steep, Force_cut, Energy_cut, minimzation_steep,    &
                            n_min_steeps, lineal_search, n_points, timers,      &
                            calc_propM, writexyz, IGRID2, propagator, NBCH,     &
-                           predcoef, scale_radial_grid, integrate_density
+                           predcoef, scale_radial_grid, integrate_density, remove_radii
 
     use ECP_mod   , only : ecpmode, ecptypes, tipeECP, ZlistECP, cutECP,       &
                            local_nonlocal, ecp_debug, ecp_full_range_int,      &
@@ -59,7 +59,7 @@ subroutine lio_defaults()
     FOCK_ECP_read  = .false.       ; Fulltimer_ECP      = .false.       ;
     FOCK_ECP_write = .false.       ; local_nonlocal     = 0             ;
     cutECP         = .true.        ; ecp_full_range_int = .false.       ;
-    first_steep    = .true.        ;
+    first_steep    = .true.        ; remove_radii       = 0.d0           ;
 
 !   TD-DFT options.
     propagator     = 1             ; NBCH               = 10            ;

@@ -444,10 +444,14 @@ void Partition::regenerate(void) {
     const double3& atom_position(fortran_vars.atom_positions(atom));
     double t0 = M_PI / (atom_shells + 1);
     double rm = fortran_vars.rm(atom);
-    double rcore = fortran_vars.rcore_base(atom);
+    double rcore = fortran_vars.rcore_base(atom); //void core por ECP atoms
 
 	std::cout << "atomo: " << atom << "Rcore: " << rcore << std::endl;
     puntos_totales += (uint)fortran_vars.grid_size * atom_shells;
+//empezando a probar pruning
+	std::cout << "Gpruning" << "atomo: " << fortran_vars.shell_min(atom) << " " << fortran_vars.shell_max(atom)<< " " << fortran_vars.computed_shells(atom)<< " " << std::endl;
+
+
     for (uint shell = 0; shell < atom_shells; shell++) {
 /// Becke
 
@@ -456,10 +460,10 @@ void Partition::regenerate(void) {
       double w = t0 * abs(sin(t1));
       double r1 = rm * (1.0 + x) / (1.0 - x);
       double wrad = w * (r1 * r1) * rm * 2.0 / ((1.0 - x) * (1.0 - x));
-
-	if (r1 > rcore) { //test Nick
-
-	std::cout << "Radio, nick " << r1 << std::endl;
+	std::cout << atom << ((r1 > rcore) && (r1 < 20.0) ? "Dentro" : "Fuera") ;
+//	if (r1 > rcore && r1 < 20.0) { //test Nick
+	if (r1 > rcore && r1 < 20.0) { //test Nick
+	  std::cout << "Radio, nick " << r1 << std::endl;
 
       for (uint point = 0; point < (uint)fortran_vars.grid_size; point++) {
         double3 rel_point_position =
@@ -505,7 +509,7 @@ void Partition::regenerate(void) {
 
 	} else { //test Nick
 	   puntos_totales  -= (uint)fortran_vars.grid_size;
-	   std::cout << "Saco" << (uint)fortran_vars.grid_size <<" puntos, atomo " << atom << std::endl;
+	   std::cout << "Saco" << (uint)fortran_vars.grid_size <<" puntos, atomo " << std::endl;
 	}
 
 

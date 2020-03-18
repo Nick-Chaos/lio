@@ -82,7 +82,12 @@ struct FortranVars {
 #endif
   /////////////////////
   
+  //Radial grid pruning
+  HostMatrix<uint> shell_min, shell_max, computed_shells;
+  uint last_grid_type;
 };
+
+
 
 struct CDFTVars {
   bool do_chrg;
@@ -116,3 +121,6 @@ extern uint verbose;
 }
 
 #endif
+
+
+void discart_shells(uint grid_type);

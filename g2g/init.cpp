@@ -128,7 +128,12 @@ extern "C" void g2g_parameter_init_(
   fortran_vars.shells2.resize(fortran_vars.atoms);
   fortran_vars.rm.resize(fortran_vars.atoms);
   fortran_vars.rm_base.resize(fortran_vars.atoms);
+
   fortran_vars.rcore_base.resize(fortran_vars.atoms);
+  fortran_vars.shell_min.resize(fortran_vars.atoms);
+  fortran_vars.shell_max.resize(fortran_vars.atoms);
+  fortran_vars.computed_shells.resize(fortran_vars.atoms);
+  fortran_vars.last_grid_type=99;
 
   /* ignore the 0th element on these */
   for (uint i = 0; i < fortran_vars.atoms; i++) {
@@ -216,6 +221,14 @@ extern "C" void g2g_parameter_init_(
 
   // For Becke partitions.
   fortran_vars.becke = becke;
+  
+  //Radial pruning GRID
+  fortran_vars.shell_min=HostMatrix<uint>(fortran_vars.atoms);
+  fortran_vars.shell_max=HostMatrix<uint>(fortran_vars.atoms);
+  fortran_vars.computed_shells=HostMatrix<uint>(fortran_vars.atoms);
+  //for (int inick = 0; inick < fortran_vars.atoms; inick++) {
+   // grid_pruning.computed_shells(i) = 99;
+  //}
 
 /** Variables para configurar libxc **/
 #if USE_LIBXC
@@ -249,10 +262,11 @@ extern "C" void g2g_deinit_(void) {
   partition.clear();
 }
 //============================================================================================================
+
 void compute_new_grid(const unsigned int grid_type) {
 	std::cout << "nueva grilla, tipo: " << grid_type << std::endl;
   switch (grid_type) {
-    fortran_vars.rm = fortran_vars.rm_base;
+    //fortran_vars.rm = fortran_vars.rm_base; esta linea de codigo esta MAL, nick
     case 0:
       fortran_vars.grid_type = SMALL_GRID;
       fortran_vars.grid_size = SMALL_GRID_SIZE;
@@ -295,6 +309,8 @@ void compute_new_grid(const unsigned int grid_type) {
       throw std::runtime_error("Error de grilla");
       break;
   }
+
+  discart_shells(grid_type);
 
   Timer t_grilla;
   t_grilla.start_and_sync();
@@ -500,3 +516,49 @@ extern "C" void g2g_set_options_(double* fort_fgm, double* fort_lcs,
 }
 
 //=================================================================================================================
+
+void discart_shells(uint grid_type){
+	std::cout << "En discart shells" << std::endl;
+	if (grid_type == fortran_vars.last_grid_type) return;
+	fortran_vars.last_grid_type = grid_type;
+	
+	for (uint atom = 0; atom < fortran_vars.atoms; atom++) {
+      uint atom_shells = fortran_vars.shells(atom);
+      double t0 = M_PI / (atom_shells + 1);
+      double rm = fortran_vars.rm(atom);
+      double rcore = fortran_vars.rcore_base(atom); //void core por ECP atoms
+      fortran_vars.shell_min(atom) = 0;
+      fortran_vars.shell_max(atom) = atom_shells;
+
+	  uint shell = 0;
+	  double r1;
+	  //las capas estan numeradas de mayor a menor radio
+      do {
+		// Becke radii for grid
+        double t1 = t0 * (shell + 1);
+        double x = cos(t1);
+        r1 = rm * (1.0 + x) / (1.0 - x);
+        
+        std::cout << "shell" << shell << " " << r1 << std::endl;
+		fortran_vars.shell_min(atom) = shell;
+		shell++;
+	  } while (  (r1 > 20.0) && shell < atom_shells);
+	  fortran_vars.shell_min(atom)--;
+		
+	  shell = atom_shells - 1;
+      do {
+		// Becke radii for grid
+        double t1 = t0 * (shell + 1);
+        double x = cos(t1);
+        r1 = rm * (1.0 + x) / (1.0 - x);
+        
+        std::cout << "shell" << shell << " " << r1 << std::endl;
+		fortran_vars.shell_max(atom) = shell;
+		shell--;
+	  } while (  (r1 < 0.2) || shell == 0);	
+   	  fortran_vars.shell_max(atom)++;
+   	  
+	  fortran_vars.computed_shells(atom)=fortran_vars.shell_max(atom)-fortran_vars.shell_min(atom);
+    }
+}
+

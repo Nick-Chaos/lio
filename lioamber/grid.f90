@@ -5,11 +5,12 @@
 ! for 50 and 116 angular points. Lebedev (Becke's method).                     !
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
 subroutine gridlio
-   use garcha_mod, only : e_, e_2, e3, Rm2, Rcore, Nr, Nr2, wang, wang2, wang3
+   use garcha_mod, only : e_, e_2, e3, Rm2, Rcore, Nr, Nr2, wang, wang2, wang3, remove_radii
    use constants_mod, only : bohr, pi
    implicit none
 
    double precision, dimension(0:54) :: Rm2t, Nrt, Nr2t
+   double precision, dimension(0:54) :: SBKJC_CORE
    double precision :: el, emgrid, p1, pi4, q1, r1, sq2, ssq3, u1, w1
    integer :: icount
 
@@ -30,15 +31,33 @@ subroutine gridlio
               40, 40, 40, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, &
               45, 45, 45, 45, 45, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, &
               50, 50, 50, 50, 50, 50, 50/
+              
+   data SBKJC_CORE /0.d0,                                                                                                   0.d0, &
+                    0.d0, 0.d0,                                                               0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
+                    0.d0, 0.d0,                                                               0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
+                    0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.02d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
+                    0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0  , 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
+                    0.d0/
+
 
    do icount = 0, 54
       Rm2(icount) = Rm2t(icount) / (2.D0 * bohr)
       Nr(icount)  = Nrt(icount)
       Nr2(icount) = Nr2t(icount)
       ! Removed radii for ECP need to complete this with calculated values
-      if (Rcore(icount) < 0.d0) Rcore(icount) = 0.25d0*Rm2(icount)
-
+      if (Rcore(icount) < 0.d0) then
+		Rcore(icount) =SBKJC_CORE(icount)
+		write(*,*) "Saco core. Z=", icount+1, "Radio:", Rcore(icount)
+	  end if
    enddo
+
+   if (remove_radii > 0.d0) then ! change radii for test
+      write(*,*) "Sacando CORE, NICK"
+      do icount = 3, 54
+         Rcore(icount) =remove_radii
+      enddo
+   end if
+
 
    pi4  = 4.D0 * pi
    sq2  = sqrt(0.5000000000000D0)

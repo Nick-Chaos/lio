@@ -6,6 +6,7 @@
      >  ,Iexch,nsol,npas,npasw,watermod,noconverge,
      > converge,nang,propagator,NBCH
       real*8 scale_radial_grid !dejo esta variable aca para que acompañe a las IGRID
+      real*8 remove_radii
       integer integrate_density! mover luego
 
       integer ex_functional_id, ec_functional_id

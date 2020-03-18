@@ -42,7 +42,6 @@ subroutine drive(iostat)
 
    ! Calls generator of table for incomplete gamma functions
    call init_math()
-!   call GRIDLIO()
 
    ! Opens files for IO
    if (writexyz) open(unit = 18,file = fcoord)
