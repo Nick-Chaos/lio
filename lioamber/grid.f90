@@ -32,10 +32,10 @@ subroutine gridlio
               45, 45, 45, 45, 45, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, &
               50, 50, 50, 50, 50, 50, 50/
               
-   data SBKJC_CORE /0.d0,&
-                    0.d0,                                                                                                   0.d0, & !H-He
-                    0.d0, 0.d0,                                                             0.d0, 0.d0, 0.d0, 0.02d0, 0.d0, 0.d0, & !Li-Ne
-                    0.d0, 0.d0,                                                             0.d0, 0.d0, 0.d0, 0.06d0, 0.d0, 0.d0, & !Na-Ar
+   data SBKJC_CORE /0.d0,                                                         & !not used
+                    0.d0, 0.d0,                                                   & !H-He
+                    0.d0, 0.09d0, 0.07d0, 0.06d0, 0.04d0, 0.02d0, 0.02d0, 0.02d0, & !Li-Ne
+        0.d0, 0.28d0,                                                             0.28d0, 0.20d0, 0.15d0, 0.13d0, 0.12d0, 0.10d0, & !Na-Ar
    0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.00d0, 0.02d0, 0.00d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, & !K-Kr
                     0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0  , 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0/ !Rb-Xe
                     !hay q parametrizar todo esto
@@ -60,7 +60,7 @@ subroutine gridlio
    end if
 
    do icount = 0, 54
-	write(*,*) "Rasios en grid", icount, "Radio:", Rcore(icount)
+	write(*,*) "Radios en grid", icount, "Radio:", Rcore(icount)
    enddo
 
    pi4  = 4.D0 * pi
