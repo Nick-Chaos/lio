@@ -445,14 +445,22 @@ void Partition::regenerate(void) {
     double t0 = M_PI / (atom_shells + 1);
     double rm = fortran_vars.rm(atom);
     double rcore = fortran_vars.rcore_base(atom); //void core por ECP atoms
+    uint used_shells = fortran_vars.computed_shells(atom);
 
 	std::cout << "atomo: " << atom << "Rcore: " << rcore << std::endl;
-    puntos_totales += (uint)fortran_vars.grid_size * atom_shells;
+    //puntos_totales += (uint)fortran_vars.grid_size * atom_shells;
+    puntos_totales += (uint)fortran_vars.grid_size * used_shells;
+    
 //empezando a probar pruning
 	std::cout << "Gpruning" << "atomo: " << fortran_vars.shell_min(atom) << " " << fortran_vars.shell_max(atom)<< " " << fortran_vars.computed_shells(atom)<< " " << std::endl;
 
+	uint shell_ini = fortran_vars.shell_min(atom);
+	uint shell_end = fortran_vars.shell_max(atom);
+	uint testshell = atom_shells;
+	//uint fortran_vars.computed_shells(atom);
 
-    for (uint shell = 0; shell < atom_shells; shell++) {
+    for (uint shell = shell_ini; shell < shell_end; shell++) {
+    //for (uint shell = 0; shell < atom_shells; shell++) {
 /// Becke
 
       double t1 = t0 * (shell + 1);
@@ -460,10 +468,11 @@ void Partition::regenerate(void) {
       double w = t0 * abs(sin(t1));
       double r1 = rm * (1.0 + x) / (1.0 - x);
       double wrad = w * (r1 * r1) * rm * 2.0 / ((1.0 - x) * (1.0 - x));
-	std::cout << atom << ((r1 > rcore) && (r1 < 20.0) ? "Dentro" : "Fuera") ;
+	std::cout << atom << ((r1 > rcore) && (r1 < fortran_vars.rmax_cut) ? "Dentro" : "Fuera") << " " << shell_ini << " " << shell << " "<< shell_end;
+	std::cout << " Radio, nick " << r1 << std::endl;
 //	if (r1 > rcore && r1 < 20.0) { //test Nick
-	if (r1 > rcore && r1 < 20.0) { //test Nick
-	  std::cout << "Radio, nick " << r1 << std::endl;
+	if (r1 > rcore && r1 < fortran_vars.rmax_cut) { //test Ni//ck
+//	  std::cout << " Radio, nick " << r1 << std::endl;
 
       for (uint point = 0; point < (uint)fortran_vars.grid_size; point++) {
         double3 rel_point_position =
@@ -509,11 +518,12 @@ void Partition::regenerate(void) {
 
 	} else { //test Nick
 	   puntos_totales  -= (uint)fortran_vars.grid_size;
-	   std::cout << "Saco" << (uint)fortran_vars.grid_size <<" puntos, atomo " << std::endl;
+	   testshell -= 1;
+	   //std::cout << " Saco" << (uint)fortran_vars.grid_size <<" puntos, atomo " << std::endl;
 	}
 
-
-    }
+	}
+	std::cout << "shells siempre, nuevas" << testshell << " " << fortran_vars.computed_shells(atom) << std::endl;
   }
 
   G2G::MINCOST = getintenv("LIO_MINCOST_OFFSET", 250000);

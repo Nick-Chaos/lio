@@ -18,7 +18,8 @@ module lionml_data
                                  minimzation_steep, n_min_steeps, n_points,    &
                                  lineal_search, timers, IGRID, IGRID2,         &
                                  use_libxc, ex_functional_id, ec_functional_id,&
-                                 gpu_level, becke, PBE0, scale_radial_grid, remove_radii
+                                 gpu_level, becke, PBE0, scale_radial_grid,    &
+                                 remove_radii, max_radii
    use tbdft_data         , only: tbdft_calc, MTB, alfaTB, betaTB, gammaTB,    &
                                   start_tdtb, end_tdtb,n_biasTB,               &
                                   driving_rateTB, TB_q_tot, TB_charge_ref,     &
@@ -103,7 +104,7 @@ module lionml_data
                   ecpmode, ecptypes, tipeECP, ZlistECP, cutECP,                &
                   local_nonlocal, ecp_debug, ecp_full_range_int, verbose_ECP,  &
                   FOCK_ECP_read, FOCK_ECP_write, Fulltimer_ECP, cut2_0, cut3_0,&
-                  remove_radii,                                                &
+                  remove_radii, max_radii,                                     &
                   ! Geometry optimizations and restraints
                   steep, Force_cut, Energy_cut, minimzation_steep,             &
                   n_min_steeps,lineal_search,n_points, number_restr,           &

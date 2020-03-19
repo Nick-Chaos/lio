@@ -37,7 +37,7 @@ subroutine gridlio
                     0.d0, 0.d0,                                                               0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
                     0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.02d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
                     0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0  , 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
-                    0.d0/
+                    0.d0/ !hay q parametrizar todo esto
 
 
    do icount = 0, 54
@@ -51,7 +51,7 @@ subroutine gridlio
 	  end if
    enddo
 
-   if (remove_radii > 0.d0) then ! change radii for test
+   if (remove_radii > 0.d0) then ! change radii for test & parametrization
       write(*,*) "Sacando CORE, NICK"
       do icount = 3, 54
          Rcore(icount) =remove_radii

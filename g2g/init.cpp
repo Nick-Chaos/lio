@@ -80,7 +80,7 @@ extern "C" void g2g_parameter_init_(
     double* e3, double* wang, double* wang2, double* wang3,
     bool& use_libxc, const unsigned int& ex_functional_id, 
     const unsigned int& ec_functional_id, bool& becke, double& fact_exchange,
-    double& scale_radial_grid, int* integrate_density, double* Rcore){
+    double& scale_radial_grid, int* integrate_density, double* Rcore, double& Rmax){
   fortran_vars.atoms = natom;
   fortran_vars.max_atoms = max_atoms;
   fortran_vars.gaussians = ngaussians;
@@ -146,6 +146,7 @@ extern "C" void g2g_parameter_init_(
     fortran_vars.rm_base(i) = Rm[Iz[i]];
     fortran_vars.rcore_base(i) = Rcore[Iz[i]];
   }
+  fortran_vars.rmax_cut = Rmax;
 
   /* MO BASIS SET */
   fortran_vars.nucleii = FortranMatrix<uint>(Nuc, fortran_vars.m, 1, 1);
@@ -530,35 +531,32 @@ void discart_shells(uint grid_type){
       fortran_vars.shell_min(atom) = 0;
       fortran_vars.shell_max(atom) = atom_shells;
 
-	  uint shell = 0;
+	  fortran_vars.shell_min(atom) = 0;
 	  double r1;
-	  //las capas estan numeradas de mayor a menor radio
-      do {
-		// Becke radii for grid
-        double t1 = t0 * (shell + 1);
+	  //las capas estan numeradas de mayor a menor radio, sinedo shell(0) la mas externa
+
+      do {//removing outer shells
+		
+        double t1 = t0 * (++fortran_vars.shell_min(atom));
         double x = cos(t1);
-        r1 = rm * (1.0 + x) / (1.0 - x);
+        r1 = rm * (1.0 + x) / (1.0 - x); // Becke radii for grid
         
-        std::cout << "shell" << shell << " " << r1 << std::endl;
-		fortran_vars.shell_min(atom) = shell;
-		shell++;
-	  } while (  (r1 > 20.0) && shell < atom_shells);
+        std::cout << "shell" << fortran_vars.shell_min(atom) << " " << r1 << std::endl;
+	  } while (  (r1 > fortran_vars.rmax_cut) && fortran_vars.shell_min(atom) < atom_shells);
 	  fortran_vars.shell_min(atom)--;
 		
-	  shell = atom_shells - 1;
-      do {
-		// Becke radii for grid
-        double t1 = t0 * (shell + 1);
+		
+	  fortran_vars.shell_max(atom) = atom_shells;
+      do {//removing inner shells
+	    double t1 = t0 * (fortran_vars.shell_max(atom)--);
         double x = cos(t1);
-        r1 = rm * (1.0 + x) / (1.0 - x);
+        r1 = rm * (1.0 + x) / (1.0 - x); // Becke radii for grid
         
-        std::cout << "shell" << shell << " " << r1 << std::endl;
-		fortran_vars.shell_max(atom) = shell;
-		shell--;
-	  } while (  (r1 < 0.2) || shell == 0);	
+        std::cout << "shell" << fortran_vars.shell_max(atom) << " " << r1 << std::endl;
+	  } while (  (r1 < fortran_vars.rcore_base(atom)) || fortran_vars.shell_max(atom) == 0);	
    	  fortran_vars.shell_max(atom)++;
    	  
-	  fortran_vars.computed_shells(atom)=fortran_vars.shell_max(atom)-fortran_vars.shell_min(atom);
+	  fortran_vars.computed_shells(atom)=fortran_vars.shell_max(atom)-fortran_vars.shell_min(atom);//total number of shell for each atom
     }
 }
 
