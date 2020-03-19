@@ -20,7 +20,7 @@ subroutine drive(iostat)
                          scale_radial_grid, integrate_density, max_radii
    use basis_data, only: nshell, nshelld, ncont, ncontd, indexii, a, c, ad, cd,&
                          af, M, Md, rmax, norm, nuc, nucd
-   use ECP_mod     , only: ecpmode
+   use ECP_mod     , only: ecpmode, IzECP
    use fileio      , only: read_coef_restart, read_rho_restart
    use fileio_data , only: verbose, rst_dens
    use math_data   , only: FAC, STR
@@ -179,13 +179,26 @@ subroutine drive(iostat)
       factor_exchange = 0.75d0
    endif
    ! G2G and AINT(GPU) Initializations
-   call g2g_parameter_init(NORM, natom, natom, M, rqm, Rm2, Iz, Nr, Nr2,  &
+   
+   if (ecpmode) then
+   call g2g_parameter_init(NORM, natom, natom, M, rqm, Rm2, IzECP, Nr, Nr2,  &
                            Nuc, M, ncont, nshell, c, a, Pmat_vec, Fmat_vec,   &
                            Fmat_vec2, rhoalpha, rhobeta, NCO, OPEN, Nunp, 0,  &
                            Iexch, e_, e_2, e3, wang, wang2, wang3, use_libxc, &
                            ex_functional_id, ec_functional_id, becke,         &
                            factor_exchange, scale_radial_grid,                &
                            integrate_density, Rcore, max_radii)
+                           
+    else             
+    call g2g_parameter_init(NORM, natom, natom, M, rqm, Rm2, Iz, Nr, Nr2,  &
+                           Nuc, M, ncont, nshell, c, a, Pmat_vec, Fmat_vec,   &
+                           Fmat_vec2, rhoalpha, rhobeta, NCO, OPEN, Nunp, 0,  &
+                           Iexch, e_, e_2, e3, wang, wang2, wang3, use_libxc, &
+                           ex_functional_id, ec_functional_id, becke,         &
+                           factor_exchange, scale_radial_grid,                &
+                           integrate_density, Rcore, max_radii)
+   endif                   
+                           
    call summon_ghosts(Iz, natom, verbose)
 
    if (gpu_level .ne. 0) call aint_parameter_init(Md, ncontd, nshelld, cd, ad, &

@@ -145,6 +145,7 @@ extern "C" void g2g_parameter_init_(
   for (uint i = 0; i < fortran_vars.atoms; i++) {
     fortran_vars.rm_base(i) = Rm[Iz[i]];
     fortran_vars.rcore_base(i) = Rcore[Iz[i]];
+    std::cout << "atomo, iz, Rm: " << i << " " << Iz[i] << " " <<Rcore[Iz[i]] << std::endl;
   }
   fortran_vars.rmax_cut = Rmax;
 
@@ -534,6 +535,8 @@ void discart_shells(uint grid_type){
 	  fortran_vars.shell_min(atom) = 0;
 	  double r1;
 	  //las capas estan numeradas de mayor a menor radio, sinedo shell(0) la mas externa
+
+	  std::cout << "radios limite: " << atom << " " << fortran_vars.rmax_cut << " " << fortran_vars.rcore_base(atom) << std::endl;
 
       do {//removing outer shells
 		

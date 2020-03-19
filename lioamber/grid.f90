@@ -32,12 +32,13 @@ subroutine gridlio
               45, 45, 45, 45, 45, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, &
               50, 50, 50, 50, 50, 50, 50/
               
-   data SBKJC_CORE /0.d0,                                                                                                   0.d0, &
-                    0.d0, 0.d0,                                                               0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
-                    0.d0, 0.d0,                                                               0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
-                    0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.02d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
-                    0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0  , 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, &
-                    0.d0/ !hay q parametrizar todo esto
+   data SBKJC_CORE /0.d0,&
+                    0.d0,                                                                                                   0.d0, & !H-He
+                    0.d0, 0.d0,                                                             0.d0, 0.d0, 0.d0, 0.02d0, 0.d0, 0.d0, & !Li-Ne
+                    0.d0, 0.d0,                                                             0.d0, 0.d0, 0.d0, 0.06d0, 0.d0, 0.d0, & !Na-Ar
+   0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.00d0, 0.02d0, 0.00d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, & !K-Kr
+                    0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0  , 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0/ !Rb-Xe
+                    !hay q parametrizar todo esto
 
 
    do icount = 0, 54
@@ -58,6 +59,9 @@ subroutine gridlio
       enddo
    end if
 
+   do icount = 0, 54
+	write(*,*) "Rasios en grid", icount, "Radio:", Rcore(icount)
+   enddo
 
    pi4  = 4.D0 * pi
    sq2  = sqrt(0.5000000000000D0)

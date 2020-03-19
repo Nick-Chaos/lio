@@ -218,7 +218,7 @@ SUBROUTINE ReasignZ()
             CALL asignacion(IzECP(i),simb)
             WRITE(*,3906) i,simb,Iz(i),Zcore(ZlistECP(j)) 
             elec_remov=elec_remov+Zcore(ZlistECP(j))
-            Rcore(Iz(i)) = -1.0 !mark for remove grid in core, agregar luego un if para prenderlo
+            Rcore(IzECP(i)) = -1.0 !mark for remove grid in core, agregar luego un if para prenderlo
          END IF
       END DO
    END DO
