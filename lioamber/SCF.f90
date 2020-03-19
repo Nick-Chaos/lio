@@ -389,7 +389,7 @@ subroutine SCF(E, fock_aop, rho_aop, fock_bop, rho_bop)
 
    converged = .false.
    call converger_init( M_f, OPEN )
-
+   
    do 999 while ( (.not. converged) .and. (niter <= nMax) )
       call g2g_timer_start('Total iter')
       call g2g_timer_sum_start('Iteration')
@@ -412,13 +412,13 @@ subroutine SCF(E, fock_aop, rho_aop, fock_bop, rho_bop)
          call SEEK_NaN(Fmat_vec,1,MM,"FOCK Coulomb")
          if (open) call SEEK_NaN(Fmat_vec2,1,MM,"FOCK B Coulomb")
       endif
-
+        write(*,*) "antes de solve groups"
       ! XC integration / Fock elements
       call g2g_timer_sum_start('Exchange-correlation Fock')
       Exc = 0.0D0
       call g2g_solve_groups(0,Exc,0)
       call g2g_timer_sum_pause('Exchange-correlation Fock')
-
+        write(*,*) "despues de solve groups"
       ! Test for NaN
       if (Dbug) then
          call SEEK_NaN(Fmat_vec,1,MM,"FOCK Ex-Corr")
